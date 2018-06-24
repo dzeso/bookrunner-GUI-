@@ -1,0 +1,278 @@
+<script>
+/*Вспомогательные функции для работы со стеком
+в дальнейшем их надо перенести в отдельную либу*/
+
+  function addToStack(data) { 
+    let arr = data.stack;
+    arr.push(data.value);
+    if (arr.length > 5)  arr.shift();
+    return arr;
+    }
+        
+  function getStatFromStack(stack) { 
+    let 
+      sum = 0,
+      length = stack.length,
+      result = {
+        sum: 0,
+        avrg: 0,
+        delta: 0
+        };
+    if (length) {
+      for (const value of stack) {
+        sum += value;
+        };
+      result = {
+        sum: sum,
+        avrg: sum/length,
+        delta: stack[length-1] - stack[0]
+        };    
+//        console.log("generateFakeDomData getStatFromStack", result, stack, length);
+      };
+    return result;
+    };
+        
+var FakeDom = {
+  state: {
+    domData: {}
+    },
+  getters: {
+    domData (state) {  
+      return state.domData;
+      },
+    },
+  mutations: {
+    setDomData (state, payload) {
+       state.domData = payload;
+//       console.log ("setDomData", state.domData);
+       },
+     setDomDataInstrument (state, payload) {
+       state.domData[payload.name] = payload.data;
+//       console.log ("setDomDataInstrument", state.domData[payload.name]);
+       }, 
+     setDomDataInstrumentItem (state, payload) {
+       state.domData[payload.instrument][payload.item] = payload.value;
+       console.log ("setDomDataInstrumentItem", state.domData[payload.instrument][payload.item]);
+       }, 
+     setTakerLimit (state, payload) {
+       state.domData[payload.instrument].takerLimit = payload.takerLimit;
+       console.log ("setTakerLimit", state.domData[payload.instrument].takerLimit);
+       },
+     setTradeState (state, payload) {
+       state.domData[payload.instrument].tradeState = payload.tradeState;
+       console.log ("setTradeState", state.domData[payload.instrument].tradeState);
+       },
+    },
+  actions: {
+    initDomData ({commit, getters}) {
+      const data = {};
+      let 
+        price = 0, 
+        dPrice = 0;
+      for (let group of getters.groups) {
+        for (let instrument of getters.instruments) {
+          dPrice = instrument.price * (Math.random() * 5 - 2.5) / 100;
+//         console.log( instrument.price, dPrice);
+          data[instrument.name+group.date] = {
+            name: instrument.name+group.date,
+            tradeState: getters.tradeState.run.name,
+            price: 1*instrument.price + dPrice,
+            dTrendPrice: 0,
+            dMaxSpredPrice: 0,
+            stckPrice: [],
+            stckDMaxSpredPrice: [],
+            stckVolMarketTrading: [],
+            stckDVolMarketTrading: [],
+            volMarketTrading: Math.floor(Math.random() * 2 * instrument.vol),
+            dVolMarketTrading: 0,
+            volTrading: 0,
+            pnl: 0,
+            dPnl: 0,
+            stckPnl: [],
+            trend: "flat",
+            priceIndicator: 50,
+            position: 0,
+            positionLong: 0,
+            positionShort: 0,
+            errPosition: 0,
+            takerMaxLimit: instrument.limit,
+            takerLimit: Math.floor(instrument.limit/10)
+          }
+//          console.log(data[instrument.name+group.date]);
+          }
+        }
+       commit("setDomData", data);
+       commit('setObjReactive', getters.domData);
+       },
+       
+    generateFakeDomData ({commit, getters}) {
+        
+      const 
+        rndGroup = Math.floor(Math.random() * getters.groups.length),
+        rndInstrument = Math.floor(Math.random() * getters.instruments.length);
+      const nmInstrument = getters.instruments[rndInstrument].name+getters.groups[rndGroup].date
+      const dtInstrument = getters.domData[nmInstrument];
+      let tradeState = dtInstrument.tradeState;
+      
+      let dPnl = Math.random() * 10 - 4.97;
+      let dEquity = dPnl/1000*getters.instruments[rndInstrument].price;
+      let dTeir = 0;
+      const pnl = 1*dtInstrument.pnl + dPnl;
+      const stckPnl = addToStack ({
+        instrument: nmInstrument,
+        stack: dtInstrument.stckPnl,
+        value: dPnl
+        });  
+      dPnl = getStatFromStack(stckPnl).avrg;
+//      console.log("generateFakeDomData Pnl", stckPnl, pnl, dPnl); 
+//      console.log("generateFakeDomData dPrice", dtInstrument, dtInstrument.price, dPrice); 
+      const dPrice = (Math.random() * 1 - 0.5) * dtInstrument.price / 100;
+      const price = (1*dtInstrument.price + dPrice);
+      const dPraceSign = (dPrice > 0) ? 1 : -1;
+      const stckPrice = addToStack ({
+        instrument: nmInstrument,
+        stack: dtInstrument.stckPrice,
+        value: price
+        });
+      const stckDMaxSpredPrice = addToStack ({
+        instrument: nmInstrument,
+        stack: dtInstrument.stckDMaxSpredPrice,
+        value: Math.abs(dPrice)
+        });     
+        
+      const dTrendPrice = getStatFromStack(stckPrice).delta;
+//      console.log("generateFakeDomData dPrice", stckPnl, dPrice, getStatFromStack(stckPrice));
+      const dMaxSpredPrice = getStatFromStack(stckDMaxSpredPrice).avrg;
+      
+      let dVolMarketTrading = Math.floor((Math.random() * 50 - 25)/100 * dtInstrument.volMarketTrading)
+      let volMarketTrading = dtInstrument.volMarketTrading + dVolMarketTrading;
+      const stckVolMarketTrading = addToStack ({
+        instrument: nmInstrument,
+        stack: dtInstrument.stckVolMarketTrading,
+        value: Math.abs(volMarketTrading)
+        });  
+      const stckDVolMarketTrading = addToStack ({
+        instrument: nmInstrument,
+        stack: dtInstrument.stckDVolMarketTrading,
+        value: Math.abs(dVolMarketTrading)
+        });
+      volMarketTrading = getStatFromStack(stckVolMarketTrading).avrg;
+      dVolMarketTrading = getStatFromStack(stckDVolMarketTrading).avrg;
+        
+      let 
+        priceIndicator = 1*dtInstrument.priceIndicator + (Math.floor(Math.random() * 5)*dPraceSign);
+//      console.log("generateFakeDomData priceIndicator new", priceIndicator, dtInstrument.priceIndicator, (Math.floor(Math.random() * 5)*dPrice*100)); 
+      if (!(priceIndicator < 90 && dtInstrument.priceIndicator > 10)) {
+        priceIndicator = dtInstrument.priceIndicator;
+//        console.log("generateFakeDomData priceIndicator skip", priceIndicator); 
+        }
+       
+//       console.log("generateFakeDomData tradeState", tradeState); 
+       
+        let 
+          positionLong = dtInstrument.positionLong,
+          positionShort = dtInstrument.positionShort,
+          position = dtInstrument.position,
+          errPosition = dtInstrument.errPosition,
+          volTrading = dtInstrument.volTrading;
+        
+        if (tradeState == getters.tradeState.run.name) {
+          
+          position = Math.floor(Math.random() * dtInstrument.takerLimit - dtInstrument.takerLimit/2) + dtInstrument.position;
+          if (Math.abs(position) > dtInstrument.takerLimit) 
+            (position > 0) ? position = dtInstrument.takerLimit : position = -dtInstrument.takerLimit;
+            
+          positionLong = Math.floor(Math.random() * dtInstrument.takerLimit - dtInstrument.takerLimit/2) + dtInstrument.positionLong;
+          if (positionLong < 0) positionLong = 0;
+          
+          positionShort = Math.abs(positionLong - Math.abs(position));
+          }
+        else if (tradeState == getters.tradeState.landing.name) {
+          positionLong = Math.abs(dtInstrument.positionLong - dtInstrument.positionShort);
+          positionShort = positionLong;
+          position = 0;
+          tradeState =  getters.tradeState.stop.name;
+          }
+          
+        volTrading += (Math.abs(dtInstrument.positionLong - positionLong) + Math.abs(dtInstrument.positionShort - positionShort));  
+        dTeir = (volTrading - dtInstrument.volTrading) * (getters.instruments[rndInstrument].name == "BTC" ? 100 : 10);
+//        console.log("generateFakeDomData dTeir", dTeir, dEquity);
+          
+        if (tradeState != getters.tradeState.error.name) errPosition = 0;
+        if ((Math.random() * 1000) < 1) {
+          errPosition = Math.floor(Math.random() * dtInstrument.takerLimit/2 - dtInstrument.takerLimit/2);
+          tradeState =  getters.tradeState.error.name;
+          }
+          
+        if ((Math.random() * 1500) < 1) {
+          tradeState =  getters.tradeState.reconnect.name;
+          commit("setTradeState", {
+            instrument: nmInstrument,
+            tradeState: tradeState
+            });
+          }
+
+//          console.log("generateFakeDomData positions", positionLong, positionShort, dtInstrument.positionLong, dtInstrument.positionShort, errPosition); 
+
+        data = {
+          name: nmInstrument,
+          tradeState: tradeState,
+          price: price,
+          dMaxSpredPrice: dMaxSpredPrice,
+          dTrendPrice: dTrendPrice,
+          stckPrice: stckPrice,
+          stckDMaxSpredPrice: stckDMaxSpredPrice,
+          pnl: pnl,
+          dPnl: dPnl,
+          stckPnl: stckPnl,
+          stckVolMarketTrading: stckVolMarketTrading,
+          stckDVolMarketTrading: stckDVolMarketTrading,
+          volMarketTrading: volMarketTrading,
+          dVolMarketTrading: dVolMarketTrading,
+          volTrading: volTrading,
+          trend: getters.trends[Math.floor(Math.random() * getters.trends.length)],
+          priceIndicator: priceIndicator,
+          takerLimit: dtInstrument.takerLimit,
+          takerMaxLimit: dtInstrument.takerMaxLimit,
+          position: position,
+          positionLong: positionLong,
+          positionShort: positionShort,
+          errPosition: errPosition
+          }  
+          
+       if (tradeState != getters.tradeState.reconnect.name) {
+         commit("setDomDataInstrument", {name: nmInstrument, data: data});
+         const equity =  dEquity + getters.exchanges.Okex.equity; /*todo костыль переделать на нормальное получение данныхъ по бирже потом*/
+         const teir = dTeir + getters.exchanges.Okex.teir;
+//         console.log ("getters.exchanges.Okex", getters.exchanges.Okex, equity, teir);
+         commit("setExchangeData", {name: "Okex", teir: teir, equity: equity});
+         
+         }
+       commit('setObjReactive', getters.domData);
+       },
+       
+     setTakerLimit ({commit}, takerLimit) {
+       commit("setTakerLimit", takerLimit);
+       },
+       
+     setTradeState ({getters, commit}, data) {
+       let tradeState = data.tradeState;
+       console.log("setTradeState data", data); 
+       if (tradeState == getters.tradeState.pause.name) {
+         console.log("setTradeState pause");
+         if (getters.domData[data.instrument].positionLong == getters.domData[data.instrument].positionShort) {
+           tradeState = getters.tradeState.stop.name;
+           }
+         }
+       else if (tradeState == getters.tradeState.reconnect.name) {
+         tradeState = getters.tradeState.run.name;
+         }
+       commit("setTradeState", {
+         instrument: data.instrument,
+         tradeState: tradeState
+         });
+       },
+    },
+  };
+console.log ("store-fake-dome started");
+</script>

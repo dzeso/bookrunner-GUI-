@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <link href='//fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons|Russo+One|Lobster|Neucha|Oswald|Pacifico|Rubik+Mono+One|Ruslan+Display|Yeseva+One' rel="stylesheet">
+    <link href="//unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet">
+    <link href="//cdn.materialdesignicons.com/2.1.19/css/materialdesignicons.min.css" media="all" rel="stylesheet" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <title>CultureNewsDigest</title>
+    <base target="_top">
+    <?!= include('UI/css'); ?>
+  </head>
+
+  <body>
+    <div id="bookrunner">
+      <v-app>
+        <gui-app></gui-app>
+      </v-app>
+    </div>
+
+    <script src="//unpkg.com/vue/dist/vue.js">"use strict";</script>
+    <script src="//unpkg.com/vue-router/dist/vue-router.js"></script>
+    <script src="//unpkg.com/vuex"></script>
+    <script src="//unpkg.com/vuetify/dist/vuetify.js"></script>
+    
+    <?!= include('Components/slider-item'); ?>
+    <?!= include('Components/toolbar-bookruning'); ?>
+    <?!= include('Components/dom-card'); ?>
+    <?!= include('UI/app-gui'); ?>
+    <?!= include('UI/start-page'); ?>
+    <?!= include('UI/dom-view'); ?>
+    <?!= include('Store/fake-dom'); ?>
+    <?!= include('Store/main'); ?>
+    <?!= include('Vue/router'); ?>
+    <?!= include('Vue/app'); ?>
+
+  </body>
+
+</html>
+
+
+    

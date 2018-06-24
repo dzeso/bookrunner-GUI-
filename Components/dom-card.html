@@ -1,0 +1,227 @@
+<script type="text/x-template" id="dom-card-template">
+   <v-card>
+      <v-card-title primary-title :class="tradeState[domData.tradeState].color"> 
+        <v-layout row wrap>
+          <v-flex xs12>  
+            <v-layout row wrap>
+              <div :class="styleText.title">{{nmInstrument}} {{trend}} </div>
+              <v-spacer></v-spacer>
+              <div :class="styleText.info">PnL:
+                <span :class="pnl.valueColor"> {{pnl.value}}</span> 
+                <v-tooltip bottom>
+                  <span slot="activator" :class="pnl.dColor">(Δ{{pnl.d}})</span>
+                  <span>Изменение PnL за К фреймов</span>
+                </v-tooltip>
+              </div>
+            </v-layout>
+          </v-flex>
+          <v-flex xs12>  
+            <div :class="styleText.info">
+              <v-layout row wrap>
+                <v-tooltip bottom>
+                  <div slot="activator">vol: {{volMarketTrading.avrg}}</div>
+                  <span>Оборот рынка за К фреймов</span>
+                </v-tooltip>
+                <v-tooltip bottom>
+                  <div slot="activator" :class="volMarketTrading.dColor">(Δ{{volMarketTrading.d}})</div>
+                  <span>Изменение оборота за К фреймов</span>
+                </v-tooltip>               
+                <v-spacer></v-spacer>
+                <v-tooltip bottom>
+                  <div slot="activator">Δ$:</div>
+                  <span>Изменение цены за К фреймов</span>
+                </v-tooltip>
+                <div :class="price.dColor">{{price.d}}</div>
+                <v-tooltip bottom>
+                  <div slot="activator">(Δh: {{price.dhAvrg}})</div>
+                  <span>Средняя волатильность за К фреймов</span>
+                </v-tooltip> 
+              </v-layout>
+            </div>
+          </v-flex>
+        </v-layout>
+      </v-card-title>
+      <v-card-text :class="styleCard.paddingText"> 
+        <v-layout row wrap>         
+          <v-flex xs12>
+             <v-tooltip bottom>
+               <v-progress-linear slot="activator" :value="domData.priceIndicator" height="20" color="error" background-color="success" @click.native="shortValue = 50"></v-progress-linear>
+               <span>Индикатор движения цены, показывает динамику изменения</span>
+             </v-tooltip> 
+             <v-layout row wrap>
+             <div :class="styleText.info">Pos:  
+               <span :class="positionColor">{{ Math.abs(domData.position) }}</span> (
+               <span :class="styleText.colorLong">{{ domData.positionLong }}</span> |
+               <span :class="styleText.colorShort">{{ domData.positionShort }}</span>) 
+               <v-tooltip bottom  v-show="errPosition.value">
+                  <span slot="activator">Δerr:</span>
+                  <span>Расхождение Position и ePosition. Показывется только если значение > 0</span>
+               </v-tooltip>
+               <span v-show="errPosition.value" :class="errPosition.valueColor"> {{errPosition.value}}</span> 
+             </div>
+             <v-spacer></v-spacer>
+               <v-tooltip bottom>
+                   <div :class="styleText.info" slot="activator">∑: {{domData.volTrading}}</div>
+                   <span>Количество проторгованных контрактов</span>
+               </v-tooltip> 
+            </v-layout>
+            <v-tooltip bottom>
+              <slider-item 
+               slot="activator"
+               color="green"
+               :value="domData.takerLimit"
+               step=50 
+               label="taker limit" 
+               :min=0
+               :max="domData.takerMaxLimit"
+               @sliderItemValue="setNewTakerLimit">
+             </slider-item> 
+             <span>Установка лимита открытых позиций</span>
+            </v-tooltip>
+          </v-flex>
+        </v-layout>   
+      </v-card-text>
+      <v-card-actions>
+        <toolbar-bookruning @toolbarBookruningAction="doInstrumentAction"></toolbar-bookruning>
+        <v-spacer></v-spacer>
+        <v-btn icon @click.native="showCut = !showCut">
+          <v-icon>{{ showCut ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
+        </v-btn>
+      </v-card-actions>
+      <v-slide-y-transition>
+        <v-card-text v-show="showCut">
+          <p>тут будут дополнительные параметры и статистика по работе инструмента</p>
+          <div>           
+              <p>Equity: 4864<span class="green--text">(Δ31)</span></p>
+              <p>Unrealized: 
+                <span class="green--text">0.123</span> (
+                <span class="green--text">+0.246</span>/<span class="red--text">-0.123</span>)
+              </p>
+            </v-layout>
+          </v-flex> 
+          </div>
+        </v-card-text>
+      </v-slide-y-transition>
+    </v-card>
+</script>
+
+<script>
+console.log ("DomCard started");
+var DomCard = {
+    template: '#dom-card-template', 
+    name: 'dom-card',
+    components: {
+       SliderItem: SliderItem,
+       ToolbarBookruning: ToolbarBookruning
+       },
+    props: {
+      nmInstrument: String
+      },
+    computed: {
+      domData () {  
+//        console.log("dom-card domData", this.$store.getters.domData[this.nmInstrument]);
+        return this.$store.getters.domData[this.nmInstrument];
+        },
+      trend () {  
+//        console.log("dom-card trend", this.$store.getters.arrow[this.domData.trend]);
+        return this.$store.getters.arrow[this.domData.trend]
+        },
+      tradeState () {  
+        return this.$store.getters.tradeState;
+        },
+      positionColor () {  
+//        console.log("dom-card positionColor", (this.domData.position < 0) ? this.styleText.colorShort : this.styleText.colorLong);
+        return (this.domData.position < 0) ? this.styleText.colorShort : this.styleText.colorLong;
+        },
+      pnl () {  
+        return {
+          value: Math.abs(this.domData.pnl).toFixed(this.precision),
+          valueColor: (this.domData.pnl < 0) ? this.styleText.colorShort : this.styleText.colorLong,
+          d: Math.abs(this.domData.dPnl).toFixed(this.precision),
+          dColor: (this.domData.dPnl < 0) ? this.styleText.colorShort : this.styleText.colorLong
+          }
+        },
+      price () {  
+        return {
+          dhAvrg: Math.abs(this.domData.dMaxSpredPrice).toFixed(this.precision),
+          d: Math.abs(this.domData.dTrendPrice).toFixed(this.precision),
+          dColor: (this.domData.dTrendPrice < 0) ? this.styleText.colorShort : this.styleText.colorLong
+          }
+        },
+      volMarketTrading () {  
+        return {
+          avrg:  Math.floor(this.domData.volMarketTrading),
+          d:  Math.floor(Math.abs(this.domData.dVolMarketTrading)),
+          dColor: (this.domData.dVolMarketTrading < 0) ? this.styleText.colorShort : this.styleText.colorLong
+          }
+        },
+      errPosition () {  
+        return {
+          value: Math.abs(this.domData.errPosition),
+          valueColor: (this.domData.errPosition < 0) ? this.styleText.colorShort : this.styleText.colorLong
+          }
+        },
+      },
+    methods: {
+      fakeError (currentMode) {
+        const mode = Math.floor(Math.random() * 50);
+        if (mode == 2 || mode == 1) clearInterval(this.interval);
+        switch(mode) {
+          case 1: return this.colorMode.cbError;
+          case 2: return this.colorMode.gwError;
+        }
+        return currentMode;
+      },
+      
+      doInstrumentAction (mode) {
+        console.log("doInstrumentAction dom-card", mode);
+        this.$store.dispatch('setTradeState', {
+          instrument: this.nmInstrument,
+          tradeState: mode
+          });
+        },
+        
+      setNewTakerLimit (takerLimit) {
+        console.log("dom-card takerLimit", takerLimit);
+        if (takerLimit) {
+          this.$store.dispatch('setTakerLimit',{
+            instrument: this.nmInstrument,
+            takerLimit: takerLimit
+            });
+          }
+      },
+    },
+  data () {
+//    console.log("dom-card nmInstrument", this.nmInstrument);
+    return {
+      shortValue: 50,
+        precision: 3,
+        interval: 0,
+        delta: 0,
+        delay: 1000,
+        showCut: false,
+        styleText: {
+          colorShort: "red--text",
+          colorLong: "green--text",
+          title: "title",
+          info: "body-1",
+          detail: "body-2",       
+          },
+        styleCard: {
+          colorTitle: "",
+          paddingText: "py-0",
+          title: "subheading",
+          info: "body-1",
+          detail: "body-2",       
+          },
+        colorMode: {
+          cbError: "red lighten-3",
+          gwError: "light-blue lighten-3",
+          landing: "orange lighten-3",
+          stop: "blue-grey lighten-3",
+          pause: "light-green lighten-3",     
+          run: "",
+          },
+    }
+  }};
+</script>

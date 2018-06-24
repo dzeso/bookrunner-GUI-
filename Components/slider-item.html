@@ -1,0 +1,56 @@
+<script type="text/x-template" id="slider-item-template">
+  <v-flex>
+    <div
+      style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      "
+    >
+      <div class="input-group pa-0">
+        <label>{{label}}</label>
+      </div>
+      <v-chip :color="color" text-color="white" small>
+        {{itemValueLabel}}
+      </v-chip>
+    </div>
+    <v-slider
+      v-model="itemValue"
+      :color="color"
+      :step="step"
+      class="pa-0"
+      :min="min"
+      :max="max"
+      hide-details
+      @input="saveDate"
+    ></v-slider>
+  </v-flex>
+</script>
+
+<script>
+console.log ("SliderItem started");
+var SliderItem = {
+    template: '#slider-item-template', 
+    props: ['value', 'label', 'min', 'max', 'step', 'chips', 'color', "unit"],
+    name: 'slider-item',
+    computed: {
+      itemValueLabel: function() {  
+        let chip = this.itemValue;  
+//        console.log('itemValueLabel chip', this.itemValue, chip, this.chips);
+        if (this.chips) this.unit === "%" ? chip = Math.round(this.chips[chip] * 100) : chip = this.chips[chip];
+        return chip + (this.unit || "");
+        },
+    },
+    methods: {    
+      saveDate () {
+//        console.log('saveDate ', this.itemValue);
+        this.$emit('sliderItemValue', this.itemValue)
+      },
+    },
+    data: function () { 
+      return {
+        itemValue: this.value || this.min
+        }
+      }
+};
+</script>

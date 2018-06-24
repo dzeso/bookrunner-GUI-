@@ -1,0 +1,80 @@
+<script>
+
+Vue.use(Vuex);
+
+var store = new Vuex.Store ({
+  state: { 
+    exchanges: {
+      Okex: {teir: 0, equity: 0},
+      },
+     groups: [
+      {name: "Weekly", date: "0622"},
+      {name: "Bi-weekly", date: "0629"},
+      {name: "Quarterly", date: "0928"},
+      ],
+    instruments:  [
+      {name: "BTC", price: 6503.35, limit: 1000, vol: 5000},
+      {name: "LTC", price: 95.839, limit: 10000, vol: 10000},
+      {name: "ETH", price: 500.870, limit: 10000, vol: 20000},
+      {name: "BTH", price: 850.978, limit: 10000, vol: 15000},
+      {name: "XRP", price: 0.530, limit: 10000, vol: 10000},
+      {name: "EOS", price: 10.434, limit: 10000, vol: 50000},
+      ],
+    trends: ["top", "flatTop", "flat", "flatDown", "down", ],
+    arrow: {
+      top: "↑",
+      flatTop: "↗",
+      flat: "→",
+      flatDown: "↘",
+      down: "↓",  
+      },
+    tradeState: {
+      stop: {name: "stop", color: "grey"},
+      pause: {name: "pause", color: "amber"},
+      run: {name: "run", color: ""},
+      landing: {name: "landing", color: "light-green"},
+      reconnect: {name: "reconnect", color: "blue-grey"},
+      error: {name: "error", color: "red lighten-3"},
+      },
+    },
+  getters: { 
+    exchanges (state) {  
+       return state.exchanges;
+       },
+    groups (state) {  
+       return state.groups;
+       },
+    instruments (state) {  
+       return state.instruments;
+       },
+    trends (state) {  
+       return state.trends;
+       },
+    arrow (state) {  
+       return state.arrow;
+       },
+    tradeState (state) {  
+       return state.tradeState;
+       },
+    },
+  mutations: {
+    setObjReactive (state, obj) {      
+      Vue.set(obj, 'setObjReactive', 42); /* (todo проверить актуальность) принудительное обновление объекта для реактивности*/
+      Vue.delete(obj, 'setObjReactive');
+      },
+    setExchangeData (state, payload) {
+      state.exchanges[payload.name] = {teir: payload.teir, equity: payload.equity};
+//      console.log ("setExchangeData", state.exchanges);
+       },
+    },
+  actions: {
+     setExchangeData ({commit}, payload) {
+       commit("setExchangeData", payload);
+       },
+    }, 
+  modules: {
+    FakeDom
+    }
+});
+console.log ("store started");
+</script>

@@ -1,0 +1,44 @@
+<script type="text/x-template" id="toolbar-bookruning-template">
+  <div> 
+     <v-btn icon @click.native="$emit('toolbarBookruningAction', 'run')">
+          <v-tooltip bottom>
+            <v-icon slot="activator">play_arrow</v-icon>
+            <span>Начать торговлю</span>
+          </v-tooltip>
+        </v-btn>
+        <v-btn icon @click.native="$emit('toolbarBookruningAction', 'pause')">
+          <v-tooltip bottom>
+            <v-icon slot="activator">pause</v-icon>
+            <span>Приостановить торговлю</span>
+          </v-tooltip>
+        </v-btn>
+        <v-btn icon @click.native="$emit('toolbarBookruningAction', 'landing')">
+          <v-tooltip bottom>
+            <v-icon slot="activator">stop</v-icon>
+            <span>Остановить торговлю и запарковаться</span>
+          </v-tooltip>
+        </v-btn>
+        <v-btn icon @click.native="$emit('toolbarBookruningAction', 'reconnect')">
+          <v-tooltip bottom>
+            <v-icon slot="activator">cached</v-icon>
+            <span>Переконнектиться к серверу. Скорее всего кнопка лишняя, так как коннект для всей группы инструментов и будет в меню группы</span>
+          </v-tooltip>
+        </v-btn>
+      </div> 
+</script>
+
+<script>
+console.log ("toolbar-bookruning started");
+var ToolbarBookruning = {
+  template: '#toolbar-bookruning-template', 
+  name: 'toolbar-bookruning',
+  computed: {
+    },
+  methods: {
+    },
+  data: function () { 
+    return {
+      }
+    }
+  };
+</script>

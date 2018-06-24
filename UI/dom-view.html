@@ -1,0 +1,138 @@
+<script type="text/x-template" id="dom-view-template">
+  <v-card>
+    <v-container grid-list-md fluid>
+      <v-layout row wrap v-for="(exchange,name) in exchanges" :key="name">
+        <v-flex xs12>
+    <v-toolbar>
+      <v-menu offset-y>
+            <v-btn slot="activator" icon dark>
+              <v-icon>more_vert</v-icon>
+            </v-btn>
+        <v-list>
+          <v-list-tile v-for="item in items" :key="item.name" @click="doTradingImitation(item.mode)">
+            <v-list-tile-title v-text="item.name"></v-list-tile-title>
+          </v-list-tile>
+        </v-list>
+          </v-menu>
+      <v-toolbar-title class="display-1">{{name}} (teir: ₿{{exchange.teir | toBTC}}, equity: <span :class="equityColor">${{exchange.equity | toUSD}}</span>)</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <toolbar-bookruning @toolbarBookruningAction="doAction(name.foo, ...arguments)"></toolbar-bookruning>
+    </v-toolbar>
+    <v-card color="secondary">
+      <v-container grid-list-md fluid>
+        <v-layout row wrap v-for="(group,j) in groups" :key="group.name">
+          <v-flex xs12>
+            <v-toolbar color="grey darken-4" dark>
+
+              <v-toolbar-title>{{group.name}} ({{group.date}})</v-toolbar-title>
+              <v-spacer></v-spacer>
+              <toolbar-bookruning @toolbarBookruningAction="doAction(group, ...arguments)"></toolbar-bookruning>
+            </v-toolbar>
+            <v-card>
+              <v-layout row wrap>
+                <v-flex v-for="(instrument,i) in instruments" :key="instrument.name" xs12 sm6 md4 lg3 xl2>
+                  <dom-card :nmInstrument="instrument.name+group.date"></dom-card>
+                </v-flex>
+              </v-layout>
+            </v-card>
+          </v-flex>
+        </v-layout>
+      </v-container>
+    </v-card>
+       </v-flex>
+     </v-layout>
+   </v-container>
+ </v-card>
+  
+</script>
+
+<script>
+  var domView = {
+    template: '#dom-view-template',
+    components: {
+      DomCard: DomCard,
+      ToolbarBookruning: ToolbarBookruning,
+      },
+    created () {
+      this.$store.dispatch('initDomData');
+    },
+    mounted () {
+      this.queryAndIndeterminate();
+      },
+    beforeDestroy () {
+      clearInterval(this.interval);
+      },
+    filters: {
+      toBTC: function (value) {
+        if (!value) return '';
+        return Math.floor(value/6000).toString(); /*todo костыль с курсом btc*/
+        },
+      toUSD: function (value) {
+        if (!value) return '';
+        return Math.floor(value).toString(); /*todo костыль с курсом btc*/
+        }
+      },
+    computed: {
+      domData () {  
+        console.log("domData", this.$store.getters.domData);
+        return this.$store.getters.domData;
+        },
+      instruments () {
+        return this.$store.getters.instruments;
+        },
+      exchanges () {
+        return this.$store.getters.exchanges;
+        },
+      groups () {
+        return this.$store.getters.groups;
+        },    
+      equityColor () {  
+        return (this.exchanges.Okex.equity < 0) ? "red--text" : "green--text"; /*todo костыль с биржей*/
+        },
+      },
+    methods: {
+    
+      doTradingImitation (mode) {
+        if (mode) {
+          this.queryAndIndeterminate();
+          } 
+        else { clearInterval(this.interval);
+          }
+        },
+        
+      doAction (group, mode) {        
+        let 
+          groups = ((group) ? [group] : this.$store.getters.groups),
+          instruments = this.$store.getters.instruments;
+        console.log("doAction dom-view groups, group", groups, group);
+//        if (group) groups = [group];
+        for (let group of groups) {
+          for (let instrument of instruments) {
+            this.$store.dispatch('setTradeState', {
+              instrument: instrument.name + group.date,
+              tradeState: mode
+              });
+            console.log("doAction dom-view mode instrument", mode, instrument.name + group.date);
+            }
+          }
+        },
+        
+      queryAndIndeterminate () {
+        this.interval = setInterval(() => {
+          this.$store.dispatch('generateFakeDomData');
+//          this.stopper++;
+//          if (this.stopper> 100) clearInterval(this.interval);
+          }, this.delay)
+        },  
+      },
+    data () {
+      return {     
+        interval: 0,
+        delay: 10,
+//        stopper: 0,
+        items: [{name: "Запустить иммитацию торгов", mode: true}, {name: "Остановить иммитацию", mode: false}]
+      }
+    }
+  };
+console.log ("dom-view started");
+</script>

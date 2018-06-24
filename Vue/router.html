@@ -1,0 +1,19 @@
+<script>
+
+Vue.use(VueRouter);
+
+var router = new VueRouter ({
+  history: false,
+  routes: [
+    { path: '/',
+      name: 'view',
+      component: domView,
+    },
+    { path: '/view/card',
+      component: domView,
+    },
+    { path: '*', redirect: '/view/card' }
+  ]
+});
+console.log ("router started", router);
+</script>
