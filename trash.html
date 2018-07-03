@@ -1,0 +1,30 @@
+items: [
+        {
+          icon: 'keyboard_arrow_up',
+          'icon-alt': 'keyboard_arrow_down',
+          text: 'Новости',
+          model: true,
+//          active: true,
+//          inactive: true,
+          children: [
+            { icon: 'notifications', text: 'Не прочитано', link: '/news/list/unread' },
+            { icon: 'inbox', text: 'Не обработано', link: '/news/list/todo' },
+            { icon: 'rate_review', text: 'В работе', link: '/review/list' },
+            { icon: 'history', text: 'Архив', link: '/news/list/all' }
+          ]
+        },        
+        { icon: 'person', text: 'Профайл', link: '/profile' },
+        {
+          icon: 'keyboard_arrow_up',
+          'icon-alt': 'keyboard_arrow_down',
+          text: 'Labels',
+//          model: true,
+          children: [
+            { icon: 'add', text: 'Create label' }
+          ]
+        },
+        { icon: 'print', text: 'Отчеты', link: '/reports' },
+        { icon: 'settings', text: 'Settings', link: '/config' },
+        { icon: 'help', text: 'Help', link: '/help' },
+
+      ]

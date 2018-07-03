@@ -1,0 +1,33 @@
+<script type="text/x-template" id="menu-more_vert-template">
+  <v-menu offset-y open-on-hover left>
+    <v-btn slot="activator" icon dark>
+      <v-icon>more_vert</v-icon>
+    </v-btn>
+    <v-list>
+      <v-list-tile v-for="item in items" :key="item.name" @click="$emit('menuMoreVertAction', item)">
+        <v-list-tile-title v-text="item.name"></v-list-tile-title>
+      </v-list-tile>
+    </v-list>
+  </v-menu>
+</script>
+
+<script>
+console.log ("menu-more_vert started");
+var MenuMoreVert = {
+  template: '#menu-more_vert-template', 
+  name: 'menu-more_vert',
+  props: {
+    items: {
+      type: Array
+      },
+    },
+  computed: {
+    },
+  methods: {
+    },
+  data: function () { 
+    return {
+      }
+    }
+  };
+</script>

@@ -3,29 +3,13 @@
 
 <script type="text/x-template" id="gui-template"> 
   <v-app id="bookraner" dark>
-    <v-navigation-drawer
-      v-model="drawer"
-      clipped
-      fixed
-      app
-    >
-     <v-list dense>
-       <template v-for="(item, i) in items">
-        <v-list-tile @click="" :key="item.text" :to="item.link">
-          <v-list-tile-action>
-            <v-icon>{{ item.icon }}</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-content>
-            <v-list-tile-title>{{ item.text }}</v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
-      </template>
-     </v-list>
-    </v-navigation-drawer>
+    <app-navigation-drawer :isVisible="drawer" :menu="drawerList"></app-navigation-drawer>
     
     <v-toolbar app fixed clipped-left>
       <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
       <v-toolbar-title>Bookrunner</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <menu-more-vert :items="menu" @menuMoreVertAction="doAction"></menu-more-vert>
     </v-toolbar>
     
     <v-content>
@@ -47,23 +31,63 @@
 
 <script>
   var gui = {
-    template: '#gui-template',
+    template: "#gui-template",
+    components: {
+      AppNavigationDrawer: AppNavigationDrawer,
+      MenuMoreVert: MenuMoreVert,
+      },
+    created () {
+      this.$store.dispatch('initDomData');
+    },
+    mounted () {
+      this.queryAndIndeterminate();
+      },
+    beforeDestroy () {
+      clearInterval(this.interval);
+      },
     data: () => ({
-      drawer: null,
-      items: [
-        { icon: 'view_module', text: 'Карточки', link: '/view/card' },
-        { icon: 'view_list', text: 'Список', link: '/news/list/todo' },
-        { icon: 'table_chart', text: 'Таблица', link: '/review/list' },
-        { icon: 'view_week', text: 'Стаканы', link: '/news/list/all' }
+      drawer: true,
+      interval: 0,
+      delay: 10,
+      menu: [
+          {name: "Запустить имитацию торгов", mode: "start_generation"}, 
+          {name: "Остановить имитацию", mode: "stop_generation"}
+        ],
+      drawerList: [
+        { 
+          icon: "keyboard_arrow_up",
+          iconAlt: "keyboard_arrow_down",
+          text: "Карточки",
+          model: true,
+          children: [
+            { icon: "desktop_windows", text: "V1.1", link: "/view/card/v1_1" },
+            { icon: "desktop_windows", text: "V.1.2 (Замечания Ильи)", link: "/view/card/v1_2" },
+            { icon: "desktop_windows", text: "V.2.1 (без тулбара)", link: "/view_v2/card/v2_1" },
+            { icon: "tablet_android", text: "Планшет", link: "" },
+            { icon: "smartphone", text: "Смартфон", link: "" }
+          ]
+        },
+        { icon: "view_list", text: "Список", link: "/view/list/v3_1" },
+        { icon: "table_chart", text: "Таблица", link: "/review/list" },
+        { icon: "view_week", text: "Стаканы", link: "/news/list/all" },
         ]
       }),
     computed: {
       },
     methods: {
+    
+      doAction(item) {
+        if (item.mode == "start_generation") this.queryAndIndeterminate();
+        else if (item.mode == "stop_generation") clearInterval(this.interval);
+        },        
+        
+      queryAndIndeterminate () {
+        this.interval = setInterval(() => {
+          this.$store.dispatch('generateFakeDomData');
+          }, this.delay)
+        },  
       },
-    props: {
-      source: String
-    }
   }
+console.log ("app-gui started");  
 </script>
 

@@ -1,0 +1,171 @@
+<script type="text/x-template" id="dom-card-v2-template">
+  <v-card class="ma-1">
+    <v-card-title primary-title :class="tradeState[domData.tradeState].color">
+      <v-layout row wrap>
+        <v-flex xs12>
+          <v-layout row wrap>
+            <div :class="styleText.title">{{nmInstrument}}</div>
+            <v-spacer></v-spacer>
+            <div :class="styleText.info">PnL:
+              <span :class="pnl.valueColor"> {{pnl.value}}</span>
+              <v-tooltip bottom>
+                <span slot="activator" :class="pnl.dColor">(Δ{{pnl.d}})</span>
+                <span>Изменение PnL за К фреймов</span>
+              </v-tooltip>
+            </div>
+          </v-layout>
+        </v-flex>
+        <v-flex xs12>
+          <div :class="styleText.info">
+            <v-layout row wrap>
+              <v-tooltip bottom>
+                <div slot="activator">vol: {{volMarketTrading.avrg | toShort}}</div>
+                <span>Оборот рынка за К фреймов</span>
+              </v-tooltip>
+              <v-tooltip bottom>
+                <div slot="activator" :class="volMarketTrading.dColor">(Δ{{volMarketTrading.d | toShort}})</div>
+                <span>Изменение оборота за К фреймов</span>
+              </v-tooltip>
+              <v-spacer></v-spacer>
+              <v-tooltip bottom>
+                <div slot="activator">Δ$:</div>
+                <span>Изменение цены за К фреймов</span>
+              </v-tooltip>
+              <div :class="price.dColor">{{price.d}}</div>
+              <v-tooltip bottom>
+                <div slot="activator">(Δh: {{price.dhAvrg}})</div>
+                <span>Средняя волатильность за К фреймов</span>
+              </v-tooltip>
+            </v-layout>
+          </div>
+        </v-flex>
+      </v-layout>
+    </v-card-title>
+    <v-card-text :class="styleCard.paddingText">
+      <v-layout row wrap>
+        <v-flex xs12>
+          <slider-item color="green" :value="domData.takerLimit" step=50 label="taker limit" :min=0 :max="domData.takerMaxLimit" @sliderItemValue="setNewTakerLimit">
+          </slider-item>
+          </v-tooltip>
+        </v-flex>
+        <v-flex xs12>
+          <v-layout row wrap>
+            <div :class="styleText.info">Pos:
+              <span :class="positionColor">{{ Math.abs(domData.position) }}</span> (
+              <span :class="styleText.colorLong">{{ domData.positionLong }}</span> |
+              <span :class="styleText.colorShort">{{ domData.positionShort }}</span>)
+              <span v-show="errPosition.value" :class="errPosition.valueColor">Δerr: {{errPosition.value}}</span>
+            </div>
+            <v-spacer></v-spacer>
+            <div :class="styleText.info">∑: {{domData.volTrading | toShort}}</div>
+          </v-layout>
+        </v-flex>
+        <v-progress-linear :value="domData.priceIndicator" height="2" color="error" background-color="success"></v-progress-linear>
+      </v-layout>
+    </v-card-text>
+  </v-card>
+</script>
+
+<script>
+console.log ("DomCardV2 started");
+var DomCardV2 = {
+    template: '#dom-card-v2-template', 
+    name: 'dom-card-v2',
+    components: {
+       SliderItem: SliderItem,
+       ToolbarBookruning: ToolbarBookruning
+       },
+    props: {
+      nmInstrument: String
+      },
+    filters: {
+      toShort: function (value) {
+        if (!value) return '';
+        if (value > 1000 && value < 1000000) value = Math.round (value/1000).toString() + "k"
+        else if (value > 1000000) value = Math.round (value/1000000).toString() + "m"
+        return value;
+        },
+      },
+    computed: {
+      domData () {  
+//        console.log("dom-card domData", this.$store.getters.domData[this.nmInstrument]);
+        return this.$store.getters.domData[this.nmInstrument];
+        },
+      tradeState () {  
+        return this.$store.getters.tradeState;
+        },
+      positionColor () {  
+//        console.log("dom-card positionColor", (this.domData.position < 0) ? this.styleText.colorShort : this.styleText.colorLong);
+        return (this.domData.position < 0) ? this.styleText.colorShort : this.styleText.colorLong;
+        },
+      pnl () {  
+        return {
+          value: Math.abs(this.domData.pnl).toFixed(this.precision),
+          valueColor: (this.domData.pnl < 0) ? this.styleText.colorShort : this.styleText.colorLong,
+          d: Math.abs(this.domData.dPnl).toFixed(this.precision),
+          dColor: (this.domData.dPnl < 0) ? this.styleText.colorShort : this.styleText.colorLong
+          }
+        },
+      price () {  
+        return {
+          dhAvrg: Math.abs(this.domData.dMaxSpredPrice).toFixed(this.precision),
+          d: Math.abs(this.domData.dTrendPrice).toFixed(this.precision),
+          dColor: (this.domData.dTrendPrice < 0) ? this.styleText.colorShort : this.styleText.colorLong
+          }
+        },
+      volMarketTrading () {  
+        return {
+          avrg:  Math.floor(this.domData.volMarketTrading),
+          d:  Math.floor(Math.abs(this.domData.dVolMarketTrading)),
+          dColor: (this.domData.dVolMarketTrading < 0) ? this.styleText.colorShort : this.styleText.colorLong
+          }
+        },
+      errPosition () {  
+        return {
+          value: Math.abs(this.domData.errPosition),
+          valueColor: (this.domData.errPosition < 0) ? this.styleText.colorShort : this.styleText.colorLong
+          }
+        },
+      },
+    methods: {
+      
+      doInstrumentAction (mode) {
+        console.log("doInstrumentAction dom-card", mode);
+        this.$store.dispatch('setTradeState', {
+          instrument: this.nmInstrument,
+          tradeState: mode
+          });
+        },
+        
+      setNewTakerLimit (takerLimit) {
+        console.log("dom-card takerLimit", takerLimit);
+        if (takerLimit) {
+          this.$store.dispatch('setTakerLimit',{
+            instrument: this.nmInstrument,
+            takerLimit: takerLimit
+            });
+          }
+      },
+    },
+  data () {
+//    console.log("dom-card nmInstrument", this.nmInstrument);
+    return {
+      precision: 2,
+      showCut: false,
+      styleText: {
+        colorShort: "red--text",
+        colorLong: "green--text",
+        title: "title",
+        info: "body-1",
+        detail: "body-2",       
+        },
+      styleCard: {
+        colorTitle: "",
+        paddingText: "py-0 px-3",
+        title: "subheading",
+        info: "body-1",
+        detail: "body-2",       
+        },
+    }
+  }};
+</script>

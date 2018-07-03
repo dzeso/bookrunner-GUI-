@@ -1,4 +1,4 @@
-<script type="text/x-template" id="dom-view-template">
+<script type="text/x-template" id="dom-view-v2-template">
   <v-card>
       <v-container grid-list-md fluid>
       <v-layout row wrap v-for="(exchange,name) in exchanges" :key="name">
@@ -6,7 +6,7 @@
     <v-toolbar>
       <v-toolbar-title class="display-1">{{version}} {{name}} | teir: ₿{{exchange.teir | toBTC | toShort}}, equity: <span :class="equityColor">${{exchange.equity | toUSD}}</span></v-toolbar-title>
       <v-spacer></v-spacer>
-      <toolbar-bookruning v-if="version == 'v1_1'" @toolbarBookruningAction="doAction(name.foo, ...arguments)"></toolbar-bookruning>
+      <menu-more-vert :items="menu" @menuMoreVertAction="doAction(group, ...arguments)"></menu-more-vert>
     </v-toolbar>
     <v-card>
       <v-container grid-list-md fluid>
@@ -15,13 +15,13 @@
             <v-toolbar>
               <v-toolbar-title>{{group.name}} ({{group.date}})</v-toolbar-title>
               <v-spacer></v-spacer>
-              <toolbar-bookruning @toolbarBookruningAction="doAction(group, ...arguments)"></toolbar-bookruning>
+              <menu-more-vert :items="menu" @menuMoreVertAction="doAction(group, ...arguments)"></menu-more-vert>
             </v-toolbar>
             <v-card>
               <v-layout row wrap>
                 <v-flex v-for="(instrument,i) in instruments" :key="instrument.name" xs12 sm6 md4 lg3 xl2>
-                  <dom-card v-if="version == 'v1_1' " :nmInstrument="instrument.name+group.date"></dom-card>
-                  <dom-card-v2 v-else="version == 'v1_2' " :nmInstrument="instrument.name+group.date"></dom-card-v2>
+                  <dom-card v-if="version == 'v1' " :nmInstrument="instrument.name+group.date"></dom-card>
+                  <dom-card-v2 v-else="version == 'v2' " :nmInstrument="instrument.name+group.date"></dom-card-v2>
                 </v-flex>
               </v-layout>
             </v-card>
@@ -37,18 +37,19 @@
 </script>
 
 <script>
-  var domView = {
-    template: "#dom-view-template",
+  var domViewV2 = {
+    template: "#dom-view-v2-template",
     props: {
         version: {
           type: String,
-          default: "v1_2"
+          default: "v2_1"
           },
         },
     components: {
       DomCard: DomCard,
       DomCardV2: DomCardV2,
       ToolbarBookruning: ToolbarBookruning,
+      MenuMoreVert: MenuMoreVert,
       },
     filters: {
       toBTC: function (value) {
@@ -57,7 +58,7 @@
         },
       toUSD: function (value) {
         if (!value) return '';
-        return Math.floor(value).toString(); /*todo костыль с курсом btc*/
+        return Math.floor(value).toString();
         },
       toShort: function (value) {
         if (!value) return '';
@@ -68,7 +69,7 @@
       },
     computed: {
       domData () {  
-        console.log("domData", this.$store.getters.domData);
+//        console.log("domData", this.$store.getters.domData);
         return this.$store.getters.domData;
         },
       instruments () {
@@ -85,26 +86,33 @@
         },
       },
     methods: {
-      doAction (group, mode) {        
+        
+      doAction (group, item) {        
         let 
           groups = ((group) ? [group] : this.$store.getters.groups),
           instruments = this.$store.getters.instruments;
-        console.log("doAction dom-view groups, group", groups, group);
+        console.log("doAction dom-view groups, group", item, groups, group);
         for (let group of groups) {
           for (let instrument of instruments) {
             this.$store.dispatch('setTradeState', {
               instrument: instrument.name + group.date,
-              tradeState: mode
+              tradeState: item.mode
               });
-            console.log("doAction dom-view mode instrument", mode, instrument.name + group.date);
+            console.log("doAction dom-view mode instrument", item.mode, instrument.name + group.date);
             }
           }
         },
       },
     data () {
-      return {     
+      return {    
+        menu: [
+          {name: "Торговать", mode: "run"}, 
+          {name: "Пауза", mode: "pause"},
+          {name: "Парковать", mode: "lending"}, 
+          {name: "Реконект", mode: "reconnect"},
+        ],
       }
     }
   };
-console.log ("dom-view started", this.version);
+console.log ("dom-view-v2 started", this.version);
 </script>

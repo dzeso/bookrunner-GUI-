@@ -7,11 +7,16 @@ var store = new Vuex.Store ({
     exchanges: {
       Okex: {teir: 0, equity: 0},
       },
-     groups: [
-      {name: "Weekly", date: "0622"},
-      {name: "Bi-weekly", date: "0629"},
-      {name: "Quarterly", date: "0928"},
+    groups: [
+      {name: "Weekly", date: "0622", teir: 0, equity: 0},
+      {name: "Bi-weekly", date: "0629", teir: 0, equity: 0},
+      {name: "Quarterly", date: "0928", teir: 0, equity: 0},
       ],
+    groupsIndex: { // приходится так делать из-за того, что ключи объектов выдаются в произвольном порядке
+      Weekly: 0,
+      "Bi-weekly": 1,
+      Quarterly: 2
+      },
     instruments:  [
       {name: "BTC", price: 6503.35, limit: 1000, vol: 5000},
       {name: "LTC", price: 95.839, limit: 10000, vol: 10000},
@@ -44,6 +49,9 @@ var store = new Vuex.Store ({
     groups (state) {  
        return state.groups;
        },
+    groupsIndex (state) {  
+       return state.groups;
+       },
     instruments (state) {  
        return state.instruments;
        },
@@ -66,10 +74,19 @@ var store = new Vuex.Store ({
       state.exchanges[payload.name] = {teir: payload.teir, equity: payload.equity};
 //      console.log ("setExchangeData", state.exchanges);
        },
+    setGroupData (state, payload) {
+      const index = state.groupsIndex[payload.name]
+      state.groups[index].teir += payload.dTeir;
+      state.groups[index].equity += payload.dEquity;
+//      console.log ("setGroupData", state.groups[index]);
+       },
     },
   actions: {
      setExchangeData ({commit}, payload) {
        commit("setExchangeData", payload);
+       },
+     setGroupData ({commit}, payload) {
+       commit("setGroupData", payload);
        },
     }, 
   modules: {

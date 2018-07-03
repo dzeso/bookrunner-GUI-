@@ -1,0 +1,100 @@
+<script type="text/x-template" id="dom-list-template">
+    <div>
+      <v-expansion-panel v-model="panel" expand>
+        <v-expansion-panel-content lazy v-for="(group,j) in groups" :key="group.name">
+          <div slot="header"> 
+            <v-layout row wrap>
+              <v-flex lg3 xl3>
+                {{group.name}} | teir: ₿{{group.teir | toBTC | toShort}}, $PnL: 
+                <span v-if="group.equity < 0" class="red--text"> {{group.equity | toUSD}}</span>
+                <span v-else class="green--text"> {{group.equity | toUSD}}</span>
+              </v-flex>
+                <v-flex v-for="(instrument,i) in instruments" :key="instrument.name" xs12 sm6 md4 lg1 xl1>
+                  {{instrument.name}} 
+                  <span v-if="domData[instrument.name+group.date].pnl < 0" class="red--text">{{domData[instrument.name+group.date].pnl | toPnL}}</span>
+                  <span v-else class="green--text">{{domData[instrument.name+group.date].pnl | toPnL}}</span>
+                </v-flex>
+              </v-layout>
+          </div>
+             <v-layout row wrap>
+                <v-flex v-for="(instrument,i) in instruments" :key="instrument.name" xs12 sm6 md4 lg4 xl2>
+                  <dom-card-v2 :nmInstrument="instrument.name+group.date"></dom-card-v2>                             
+                </v-flex>
+              </v-layout>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+    </div>
+  
+</script>
+
+<script>
+  var domList = {
+    template: "#dom-list-template",
+    props: {
+        version: {
+          type: String,
+          default: "v3_1"
+          },
+        },
+    components: {
+      DomCardV2: DomCardV2,
+      MenuMoreVert: MenuMoreVert,
+      },
+    filters: {
+      toBTC: function (value) {
+        if (!value) return '';
+        return Math.floor(value/6000).toString(); /*todo костыль с курсом btc*/
+        },
+      toUSD: function (value) {
+        if (!value) return '';
+        return Math.floor(value).toString();
+        },
+      toPnL: function (value) {
+        if (!value) return '';
+        return Math.abs(value).toFixed(3);
+        },
+      toShort: function (value) {
+        if (!value) return '';
+        if (value > 10000 && value < 10000000) value = Math.round (value/1000).toString() + "k"
+        else if (value > 10000000) value = Math.round (value/1000000).toString() + "m"
+        return value;
+        },
+      },
+    computed: {
+      domData () {  
+//        console.log("domData", this.$store.getters.domData);
+        return this.$store.getters.domData;
+        },
+      instruments () {
+        return this.$store.getters.instruments;
+        },
+      groups () {
+        return this.$store.getters.groups;
+        },    
+      },
+    methods: {
+        
+      doAction (group, item) {        
+        let 
+          groups = ((group) ? [group] : this.$store.getters.groups),
+          instruments = this.$store.getters.instruments;
+        console.log("doAction dom-list groups, group", item, groups, group);
+        for (let group of groups) {
+          for (let instrument of instruments) {
+            this.$store.dispatch('setTradeState', {
+              instrument: instrument.name + group.date,
+              tradeState: item.mode
+              });
+            console.log("doAction dom-list mode instrument", item.mode, instrument.name + group.date);
+            }
+          }
+        },
+      },
+    data () {
+      return {    
+        panel: [],
+      }
+    }
+  };
+console.log ("dom-list started", this.version);
+</script>

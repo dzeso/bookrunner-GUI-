@@ -107,9 +107,12 @@ var FakeDom = {
        
     generateFakeDomData ({commit, getters}) {
         
-      const 
-        rndGroup = Math.floor(Math.random() * getters.groups.length),
+      let 
+        rndGroup = Math.floor(Math.random() * getters.groups.length * 2),
         rndInstrument = Math.floor(Math.random() * getters.instruments.length);
+      if (rndGroup == 3) rndGroup = 1;
+      else if (rndGroup > 3) rndGroup = 2;
+//      console.log(rndGroup);
       const nmInstrument = getters.instruments[rndInstrument].name+getters.groups[rndGroup].date
       const dtInstrument = getters.domData[nmInstrument];
       let tradeState = dtInstrument.tradeState;
@@ -144,7 +147,7 @@ var FakeDom = {
 //      console.log("generateFakeDomData dPrice", stckPnl, dPrice, getStatFromStack(stckPrice));
       const dMaxSpredPrice = getStatFromStack(stckDMaxSpredPrice).avrg;
       
-      let dVolMarketTrading = Math.floor((Math.random() * 50 - 25)/100 * dtInstrument.volMarketTrading)
+      let dVolMarketTrading = Math.floor((Math.random() * 10 - 5)/100 * dtInstrument.volMarketTrading)
       let volMarketTrading = dtInstrument.volMarketTrading + dVolMarketTrading;
       const stckVolMarketTrading = addToStack ({
         instrument: nmInstrument,
@@ -154,7 +157,7 @@ var FakeDom = {
       const stckDVolMarketTrading = addToStack ({
         instrument: nmInstrument,
         stack: dtInstrument.stckDVolMarketTrading,
-        value: Math.abs(dVolMarketTrading)
+        value: dVolMarketTrading
         });
       volMarketTrading = getStatFromStack(stckVolMarketTrading).avrg;
       dVolMarketTrading = getStatFromStack(stckDVolMarketTrading).avrg;
@@ -162,7 +165,7 @@ var FakeDom = {
       let 
         priceIndicator = 1*dtInstrument.priceIndicator + (Math.floor(Math.random() * 5)*dPraceSign);
 //      console.log("generateFakeDomData priceIndicator new", priceIndicator, dtInstrument.priceIndicator, (Math.floor(Math.random() * 5)*dPrice*100)); 
-      if (!(priceIndicator < 90 && dtInstrument.priceIndicator > 10)) {
+      if (!(priceIndicator < 90 && priceIndicator > 10)) {
         priceIndicator = dtInstrument.priceIndicator;
 //        console.log("generateFakeDomData priceIndicator skip", priceIndicator); 
         }
@@ -178,14 +181,22 @@ var FakeDom = {
         
         if (tradeState == getters.tradeState.run.name) {
           
-          position = Math.floor(Math.random() * dtInstrument.takerLimit - dtInstrument.takerLimit/2) + dtInstrument.position;
-          if (Math.abs(position) > dtInstrument.takerLimit) 
-            (position > 0) ? position = dtInstrument.takerLimit : position = -dtInstrument.takerLimit;
-            
-          positionLong = Math.floor(Math.random() * dtInstrument.takerLimit - dtInstrument.takerLimit/2) + dtInstrument.positionLong;
+          positionLong = Math.floor(Math.random() * dtInstrument.takerLimit/2 - dtInstrument.takerLimit/4) + dtInstrument.positionLong;
           if (positionLong < 0) positionLong = 0;
+          positionShort = Math.floor(Math.random() * dtInstrument.takerLimit/2 - dtInstrument.takerLimit/4) + dtInstrument.positionShort;
+          if (positionShort < 0) positionShort = 0;
           
-          positionShort = Math.abs(positionLong - Math.abs(position));
+          position = positionLong - positionShort;
+          if (dtInstrument.takerLimit < Math.abs(position)) {
+            if (position > 0) {
+              positionLong = positionLong - (position - dtInstrument.takerLimit);
+              position = dtInstrument.takerLimit;
+              }
+            else {
+              positionShort = positionShort + (position + dtInstrument.takerLimit);
+              position = -dtInstrument.takerLimit;
+              }
+            }
           }
         else if (tradeState == getters.tradeState.landing.name) {
           positionLong = Math.abs(dtInstrument.positionLong - dtInstrument.positionShort);
@@ -199,12 +210,12 @@ var FakeDom = {
 //        console.log("generateFakeDomData dTeir", dTeir, dEquity);
           
         if (tradeState != getters.tradeState.error.name) errPosition = 0;
-        if ((Math.random() * 1000) < 1) {
+        if ((Math.random() * 8000) < 1) {
           errPosition = Math.floor(Math.random() * dtInstrument.takerLimit/2 - dtInstrument.takerLimit/2);
           tradeState =  getters.tradeState.error.name;
           }
           
-        if ((Math.random() * 1500) < 1) {
+        if ((Math.random() * 10000) < 1) {
           tradeState =  getters.tradeState.reconnect.name;
           commit("setTradeState", {
             instrument: nmInstrument,
@@ -242,10 +253,11 @@ var FakeDom = {
           
        if (tradeState != getters.tradeState.reconnect.name) {
          commit("setDomDataInstrument", {name: nmInstrument, data: data});
-         const equity =  dEquity + getters.exchanges.Okex.equity; /*todo костыль переделать на нормальное получение данныхъ по бирже потом*/
-         const teir = dTeir + getters.exchanges.Okex.teir;
-//         console.log ("getters.exchanges.Okex", getters.exchanges.Okex, equity, teir);
+         let equity =  dEquity + getters.exchanges.Okex.equity; /*todo костыль переделать на нормальное получение данныхъ по бирже потом*/
+         let teir = dTeir + getters.exchanges.Okex.teir;
+//         console.log ("getters.exchanges.Okex", getters.groups[rndGroup].name, equity, teir);
          commit("setExchangeData", {name: "Okex", teir: teir, equity: equity});
+         commit("setGroupData", {name: getters.groups[rndGroup].name, dTeir: dTeir, dEquity: dEquity});
          
          }
        commit('setObjReactive', getters.domData);
