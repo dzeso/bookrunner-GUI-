@@ -1,0 +1,73 @@
+ <script type="text/x-template" id="chart-combo-template">
+  <GChart
+    type="ComboChart"
+    :data="chartData"
+    :options="chartOptions"
+  />
+</script>
+
+<script>
+    
+  var ChartCombo = {
+    template: "#chart-combo-template",
+    props: {
+      chartData: Array,
+      chartConfig: Object
+        },
+    data () {
+      return {    
+        chartOptions: {
+          theme: this.chartConfig.theme,
+          backgroundColor: this.chartConfig.backgroundColor || 'white', //transparent
+
+          height: this.chartConfig.height || 300,
+          orientation: this.chartConfig.orientation,
+          isStacked: this.chartConfig.isStacked || false,
+          areaOpacity: 0.5,
+          chartArea: {
+            left: 50, right: 50,
+            top: 50, bottom: 50,
+            width: '0%',
+            height: '70%'
+            },
+            
+          
+          fontName: this.chartConfig.fontName || 'Oswald',
+          title: this.chartConfig.title,
+          titleTextStyle: {
+            color: "grey",
+            fontName: "Oswald",
+            fontSize: 16,
+            bold: true,
+            },
+            
+          legend: {
+            maxLines: 2,
+            position: 'bottom',
+            alignment: 'start',
+            textStyle: { 
+              fontSize: 10,
+              },
+            },
+            
+          series: this.chartConfig.series,
+          seriesType: this.chartConfig.seriesType || 'area',
+          vAxes: this.chartConfig.vAxes,
+          hAxis: {
+            textPosition: this.chartConfig.hAxisTextPosition || "out",
+            textStyle: {
+              fontSize: 8,
+              }
+            },
+          vAxis: {
+            textPosition: this.chartConfig.vAxisTextPosition || "out",
+            textStyle: {
+              fontSize: 10,
+              },
+            },
+          },
+        }  
+      }  
+  };
+console.log ("chart-combo started");
+</script>

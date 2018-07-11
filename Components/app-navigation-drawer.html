@@ -1,7 +1,7 @@
 <script type="text/x-template" id="app-navigation-drawer-template">
 <v-navigation-drawer
       fixed
-      :clipped="$vuetify.breakpoint.mdAndUp"
+      :clipped="clipped"
       app
       :value ="drawer"
     >
@@ -78,6 +78,10 @@ var AppNavigationDrawer = {
     drawer: function() {  
       console.log ("app-navigation-drawer this.isVisible", this.isVisible);
       return  this.isVisible;
+      },
+    clipped: function() {  
+      this.isVisible = this.$vuetify.breakpoint.mdAndUp;
+      return this.$vuetify.breakpoint.mdAndUp;
       },
     items: function() {  
       return  this.menu;

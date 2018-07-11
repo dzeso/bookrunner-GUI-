@@ -1,0 +1,97 @@
+ <script type="text/x-template" id="charts-view-template">
+ <div> 
+ 
+    <v-layout column>
+      <v-flex xs12>
+        <v-card>
+          <v-container
+            fluid
+            grid-list-md
+          >
+            <v-layout row wrap>
+              <v-flex xs6>
+                <v-card>
+                    <v-container
+                      fill-height
+                      fluid
+                      pa-2
+                    >
+                      <v-layout row wrap>
+                        <v-flex xs12>
+                           <span class="body-1 font-weight-thin info--text">{{configPnlVol.title}}</span>
+                        </v-flex>  
+                        <v-flex xs12>
+                           <chart-combo
+                             :chartData="dataPnlVol"
+                             :chartConfig="configPnlVol"
+                           />
+                        </v-flex>
+                      </v-layout>
+                    </v-container>
+                </v-card>
+              </v-flex>
+              
+              <v-flex xs6>
+                <v-card>
+                    <v-container
+                      fill-height
+                      fluid
+                      pa-2
+                    >
+                      <v-layout row wrap>
+                        <v-flex xs12>
+                           <span class="body-1 font-weight-thin info--text">{{configPnlVol.title}}</span>
+                        </v-flex>  
+                        <v-flex xs12>
+                           <chart-bars
+                           />
+                        </v-flex>
+                      </v-layout>
+                    </v-container>
+                </v-card>
+              </v-flex>
+              
+            </v-layout>
+          </v-container>
+        </v-card>
+      </v-flex>
+    </v-layout>
+   </div>
+</script>
+
+<script>
+    
+  var chartsView = {
+    template: "#charts-view-template",
+    props: {
+        },
+    components: {
+      ChartCombo: ChartCombo,
+      ChartBars: ChartBars2Axis,
+      },
+    computed: {
+      dataPnlVol () {  
+        let data = this.$store.getters.exchanges.Okex.hstEquityDTeir.slice(-59);
+        while(data.length<60) {
+          data.push([,,,]);
+          }
+//        console.log ("charts-view chartData", ([this.dataHeader]).concat(this.$store.getters.exchanges.Okex.hstEquityDTeir));
+//        return ([this.dataHeader]).concat(this.$store.getters.exchanges.Okex.hstEquityDTeir.concat(this.emptyData));
+        return ([["time","equity","dTeir"]]).concat(data);
+        },
+      },
+    methods: {
+      },
+    data () {
+      return {    
+        configPnlVol:
+          { title: "PnL и Δvol",
+            seriesTypeMain: "line",
+            seriesAxisMaxValueMain: 600000,
+            seriesAxisMaxValueAlt: 1000
+          },
+        }  
+      }  
+  };
+console.log ("chart-view started");
+</script>

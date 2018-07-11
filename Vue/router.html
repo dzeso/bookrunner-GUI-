@@ -6,7 +6,7 @@ var router = new VueRouter ({
   history: false,
   routes: [
     { path: '/',
-      component: domList,
+      component: chartsView,
     },
     { path: '/view/card/:version',
       component: domView,
@@ -20,7 +20,11 @@ var router = new VueRouter ({
       component: domList,
       props: true
     },
-    { path: '*', redirect: '/view_v2/card/v2_1' }
+    { path: '/view/charts',
+      component: chartsView,
+      props: true
+    },
+    { path: '*', redirect: '/view/charts' }
   ]
 });
 console.log ("router started", router);

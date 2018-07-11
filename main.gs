@@ -9,3 +9,7 @@ function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename)
       .getContent();
 }
+
+function includeFromGoogleDrive(id) {
+  return "<script>" + DriveApp.getFileById(id).getBlob().getDataAsString() + "</script>";
+}

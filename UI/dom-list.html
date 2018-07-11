@@ -1,23 +1,28 @@
 <script type="text/x-template" id="dom-list-template">
     <div>
-      <v-expansion-panel v-model="panel" expand>
+      <v-expansion-panel v-model="panel" expand class="ma-2">
         <v-expansion-panel-content lazy v-for="(group,j) in groups" :key="group.name">
           <div slot="header"> 
-            <v-layout row wrap>
-              <v-flex lg3 xl3>
-                {{group.name}} | teir: ₿{{group.teir | toBTC | toShort}}, $PnL: 
+            <v-layout row>
+              <v-flex xs12>
+                <menu-more-vert :items="menu" @menuMoreVertAction="doAction(group, ...arguments)"></menu-more-vert>
+                <span class="title font-weight-thin info--text"> {{group.name}} </span>
+                teir: ₿{{group.teir | toBTC | toShort}}
+                $PnL: 
                 <span v-if="group.equity < 0" class="red--text"> {{group.equity | toUSD}}</span>
                 <span v-else class="green--text"> {{group.equity | toUSD}}</span>
               </v-flex>
-                <v-flex v-for="(instrument,i) in instruments" :key="instrument.name" xs12 sm6 md4 lg1 xl1>
-                  {{instrument.name}} 
-                  <span v-if="domData[instrument.name+group.date].pnl < 0" class="red--text">{{domData[instrument.name+group.date].pnl | toPnL}}</span>
-                  <span v-else class="green--text">{{domData[instrument.name+group.date].pnl | toPnL}}</span>
+            </v-layout>
+            <v-layout row>
+                <v-flex v-for="(instrument,i) in instruments" :key="instrument.name" xs2>
+                    {{instrument.name}} 
+                  	<span v-if="domData[instrument.name+group.date].pnl < 0" class="red--text">{{domData[instrument.name+group.date].pnl | toPnL}}</span>
+                  	<span v-else class="green--text">{{domData[instrument.name+group.date].pnl | toPnL}}</span>
                 </v-flex>
-              </v-layout>
+            </v-layout>
           </div>
              <v-layout row wrap>
-                <v-flex v-for="(instrument,i) in instruments" :key="instrument.name" xs12 sm6 md4 lg4 xl2>
+                <v-flex v-for="(instrument,i) in instruments" :key="instrument.name" xs12 sm6 md4 lg3 xl2>
                   <dom-card-v2 :nmInstrument="instrument.name+group.date"></dom-card-v2>                             
                 </v-flex>
               </v-layout>
@@ -93,6 +98,12 @@
     data () {
       return {    
         panel: [],
+        menu: [
+          {name: "Торговать", mode: "run"}, 
+          {name: "Пауза", mode: "pause"},
+          {name: "Парковать", mode: "landing"}, 
+          {name: "Реконект", mode: "reconnect"},
+        ],
       }
     }
   };

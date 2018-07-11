@@ -1,0 +1,144 @@
+ <script type="text/x-template" id="charts-view-template">
+ <div> 
+ 
+    <v-layout column>
+      <v-flex xs12>
+        <v-card>
+          <v-container
+            fluid
+            grid-list-md
+          >
+            <v-layout row wrap>
+              <v-flex
+                v-for="(chart,index) in charts"
+                v-bind="{ [`xs${chart.flex}`]: true }"
+                :key="chart.title"
+              >
+                <v-card>
+                    <v-container
+                      fill-height
+                      fluid
+                      pa-2
+                    >
+                      <v-layout row wrap>
+                        <v-flex xs12>
+                           <chart-combo
+                             :chartData="chartsData[index]"
+                             :chartConfig="chart.config"
+                           />
+                        </v-flex>
+                      </v-layout>
+                    </v-container>
+                </v-card>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card>
+      </v-flex>
+    </v-layout>
+   </div>
+</script>
+
+<script>
+    
+  var chartsView = {
+    template: "#charts-view-template",
+    props: {
+        },
+    components: {
+      ChartCombo: ChartCombo,
+      },
+    computed: {
+      chartsData () {  
+        let data = [];
+        if (this.$store.getters.exchanges.Okex.hstEquityDTeir.length>1) data = this.$store.getters.exchanges.Okex.hstEquityDTeir.slice(-60,-1);
+        else data = this.$store.getters.exchanges.Okex.hstEquityDTeir.slice(-60);
+        while(data.length<60) {
+          data.push([,,,]);
+          }
+//        console.log ("charts-view chartData", ([this.dataHeader]).concat(this.$store.getters.exchanges.Okex.hstEquityDTeir));
+//        return ([this.dataHeader]).concat(this.$store.getters.exchanges.Okex.hstEquityDTeir.concat(this.emptyData));
+        let testData = [  
+          ['Groups', 'BTC', 'LTC', 'ETH', 'BCH', 'XRP', 'EOS'],
+          ['Weekly',  	 165,      938,         522,             998,           450,      614.6],
+          ['Bi-weekly',  135,      1120,        599,             1268,          288,      682],
+          ['Quarterly',  157,      1167,        587,             807,           397,      623],
+          ['Spots',	  	 139,      1110,        615,             968,           215,      609.4],
+          ];
+        let testData1 = [  
+          ['Month', 'BTC', 'LTC', 'ETH', 'BCH', 'XRP', 'EOS'],
+          ['2004/05',  165,      938,         522,             998,           450,      614.6],
+          ['2005/06',  135,      1120,        599,             1268,          288,      682],
+          ['2006/07',  157,      1167,        587,             807,           397,      623],
+          ['2007/08',  139,      1110,        615,             968,           215,      609.4],
+          ['2008/09',  136,      691,         629,             1026,          366,      569.6]
+          ];          
+        return [([this.dataHeader]).concat(data),testData,testData1, testData1];
+        },
+//      dataPnlVol () {  
+//        let data = this.$store.getters.exchanges.Okex.hstEquityDTeir.slice(-59);
+//        while(data.length<60) {
+//          data.push([,,,]);
+//          }
+////        console.log ("charts-view chartData", ([this.dataHeader]).concat(this.$store.getters.exchanges.Okex.hstEquityDTeir));
+////        return ([this.dataHeader]).concat(this.$store.getters.exchanges.Okex.hstEquityDTeir.concat(this.emptyData));
+//        return ([this.dataHeader]).concat(data);
+//        },
+      },
+    methods: {
+      },
+    data () {
+      return {    
+        charts: [
+          { flex: 6,
+            config: {            
+              title: "Общие выручка и объем",
+//              height: this.chartHeight,
+              vAxes: {
+            	0: { format: "short", maxValue: 4000000 },
+            	1: { format: "short",  maxValue: 1000 }
+              	},
+               series: {
+            	0: { type:  "line", targetAxisIndex: 1 },
+                1: { type:  'bars', targetAxisIndex: 0 }
+                },  
+              }
+          },
+          { flex: 6, 
+            config: {
+              title: "Pnl по инструментам",
+//              height: this.chartHeight,
+              seriesType: "bars",
+              vAxes: {
+            	0: { format: "short", maxValue: 1000 },
+            	1: { format: "short",  maxValue: 1000 }
+              	},
+//              series: {
+//            	0: { targetAxisIndex: 1 },
+//                1: { targetAxisIndex: 1 }
+//                }, 
+              } 
+            },
+          { flex: 6, 
+            config: {
+              title: "Динамика Pnl по инструментам",
+//              height: this.chartHeight,
+              seriesType: "line",
+              } 
+            },
+           { flex: 6, 
+             config: {
+               title: "Динамика volume по инструментам",
+//               height: this.chartHeight,
+               seriesType: "area",
+               isStacked: "true",
+              } 
+            }  
+              
+          ],
+        dataHeader: ["time","PnL","volume"],
+        }  
+      }  
+  };
+console.log ("chart-view started");
+</script>

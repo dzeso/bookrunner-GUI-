@@ -1,5 +1,5 @@
 <script>
-/*Вспомогательные функции для работы со стеком
+/*todo Вспомогательные функции для работы со стеком
 в дальнейшем их надо перенести в отдельную либу*/
 
   function addToStack(data) { 
@@ -105,7 +105,7 @@ var FakeDom = {
        commit('setObjReactive', getters.domData);
        },
        
-    generateFakeDomData ({commit, getters}) {
+    generateFakeDomData ({commit, dispatch, getters}) {
         
       let 
         rndGroup = Math.floor(Math.random() * getters.groups.length * 2),
@@ -253,10 +253,8 @@ var FakeDom = {
           
        if (tradeState != getters.tradeState.reconnect.name) {
          commit("setDomDataInstrument", {name: nmInstrument, data: data});
-         let equity =  dEquity + getters.exchanges.Okex.equity; /*todo костыль переделать на нормальное получение данныхъ по бирже потом*/
-         let teir = dTeir + getters.exchanges.Okex.teir;
-//         console.log ("getters.exchanges.Okex", getters.groups[rndGroup].name, equity, teir);
-         commit("setExchangeData", {name: "Okex", teir: teir, equity: equity});
+//         console.log ("getters.exchanges.Okex", getters.groups[rndGroup].name, dTeir, dEquity);
+         dispatch("setExchangeData", {name: "Okex", dTeir: dTeir, dEquity: dEquity, lastIndex: 59});
          commit("setGroupData", {name: getters.groups[rndGroup].name, dTeir: dTeir, dEquity: dEquity});
          
          }

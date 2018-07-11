@@ -1,0 +1,97 @@
+ <script type="text/x-template" id="chart-bars-2axis-template">
+  <GChart
+    :settings="{packages: ['bar']}"    
+    :data="chartData1"
+    :options="chartOptions"
+    :createChart="(el, google) => new google.charts.Bar(el)"
+    @ready="onChartReady"
+  />
+</script>
+
+<script>
+    
+  var ChartBars2Axis = {
+    template: "#chart-bars-2axis-template",
+    props: {
+      chartData: Array,
+      chartConfig: Object
+        },
+    computed: {
+      chartOptions () {
+        if (!this.chartsLib) return null
+        return this.chartsLib.charts.Bar.convertOptions({
+          chart: {
+            title: 'Company Performance',
+            subtitle: 'Sales, Expenses, and Profit: 2014-2017'
+          },
+          bars: 'horizontal', // Required for Material Bar Charts.
+          hAxis: { format: 'decimal' },
+          height: 400,
+//          colors: ['#1b9e77', '#d95f02', '#7570b3']
+          })
+        }
+      },
+    methods: {
+      onChartReady (chart, google) {
+        this.chartsLib = google
+      }
+    },
+    data () {
+      return {    
+        chartsLib: null, 
+        chartData1: [
+          ['Year', 'Sales', 'Expenses', 'Profit'],
+          ['2014', 1000, 400, 200],
+          ['2015', 1170, 460, 250],
+          ['2016', 660, 1120, 300],
+          ['2017', 1030, 540, 350]
+          ],
+//        chartOptions: {
+//          theme: this.chartConfig.theme || 'maximized',
+//          backgroundColor: this.chartConfig.backgroundColor || 'white',
+//          legend: {
+//            maxLines: 2,
+//            position: 'none',
+//            alignment: 'left',
+//            },
+//          series: {
+//            0: {
+//              type:  this.chartConfig.seriesTypeMain || 'area',
+//              targetAxisIndex: this.chartConfig.seriesAxisMain || 1,
+//              },
+//            1: {
+//              type:  this.chartConfig.seriesTypeAlt || 'bars',
+//              targetAxisIndex: this.chartConfig.seriesAxisAlt || 0,
+//              }
+//            },
+//          hAxis: {
+//            textPosition: this.chartConfig.hAxisTextPosition || "none",
+//            slantedText: true,
+//            slantedTextAngle: 45,
+//            textStyle: {
+//              fontSize: 10,
+//              }
+//            },
+//          vAxis: {
+//            textStyle: {
+//              fontSize: 10,
+//              },
+//            },
+//          vAxes: {
+//            0: {
+//              title: this.chartConfig.seriesAxisTitleMain || "",
+//              format: this.chartConfig.seriesAxisFormatMain || "short",
+//              maxValue: this.chartConfig.seriesAxisMaxValueMain
+//              },
+//            1: {
+//              title: this.chartConfig.seriesAxisTitleAlt || "",
+//              format: this.chartConfig.seriesAxisFormatAlt || "short",
+//              maxValue: this.chartConfig.seriesAxisMaxValueAlt
+//              }
+//            },   
+//          },
+        }  
+      }  
+  };
+console.log ("chart-bars-2axis started");
+</script>
