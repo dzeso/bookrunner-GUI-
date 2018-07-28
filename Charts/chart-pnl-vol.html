@@ -1,0 +1,95 @@
+ <script type="text/x-template" id="chart-pnl-vol-template">
+   <div>
+     <chart-google-standart
+       chartType="AreaChart"
+       :chartData="chartData.pnl"
+       :chartConfig="pnlOptions"
+     />
+     <chart-google-standart
+       chartType="ColumnChart"
+       :chartData="chartData.vol"
+       :chartConfig="volOptions"
+     />
+  </div>
+</script>
+
+<script>
+    
+  var ChartPnlVol = {
+    template: "#chart-pnl-vol-template",
+    components: {
+       ChartGoogleStandart: ChartGoogleStandart,
+       },
+    props: {
+      nmInstrument: String,
+      chartType: String,
+      chartConfig: Object
+        },
+    computed: {
+      inputData () {  
+//        console.log("this.inputData", this.$store.getters.hstInstrumentTradeData[this.nmInstrument]);
+        return this.$store.getters.hstInstrumentTradeData[this.nmInstrument] || [];
+        },
+        
+      chartData () {  
+        let 
+          indexStart = this.inputData.length-this.hstDepth,
+          chartDataLength = this.inputData.length,
+          hstPnl = [["time","PnL", { role: 'style' }]],
+          hstVol = [["time","vol", { role: 'style' }]];
+          
+        if (indexStart<0) indexStart = 0;
+        if (!chartDataLength) {
+          hstPnl.push([,0,'green']);
+          hstVol.push([,0,'green']);
+          };
+
+        for (let i = indexStart; i < chartDataLength; i++) {
+          hstPnl.push([
+            this.inputData[i][0],
+            this.inputData[i][1],
+            this.inputData[i][1] > 0 ? 'green' : 'red'
+            ]);
+          hstVol.push([
+            this.inputData[i][0],
+            this.inputData[i][2],
+            this.inputData[i][1] > 0 ? 'green' : 'red'
+            ]);
+          };
+        while(hstPnl.length<this.hstDepth) {
+          hstPnl.push([,,'green']);
+          hstVol.push([,,'green']);
+          }       
+        return {
+          pnl: hstPnl,
+          vol: hstVol
+          };
+        },
+          
+      },
+    data () {
+//      console.log("this.chartConfig", this.chartConfig.vAxisPnl);
+      return {
+        hstDepth: this.chartConfig.hstDepth,
+        pnlOptions: { 
+          height: this.chartConfig.heightPnl || 100,
+          legend: this.chartConfig.legendPnl || {position: "none"},
+          chartArea: this.chartConfig.chartAreaPnl || {width: '100%', height: '100%'},
+          vAxisTextPosition: this.chartConfig.vAxisTextPositionPnl || "in",
+          maxValue: this.chartConfig.vAxisPnl.maxValue,
+          minValue: this.chartConfig.vAxisPnl.minValue,
+          },
+        volOptions: {
+      	  height: this.chartConfig.heightVol || 50,
+          legend: this.chartConfig.legendVol || {position: "none"},
+          chartArea: this.chartConfig.chartAreaVol || {width: '100%', height: '100%'},
+          vAxisTextPosition: this.chartConfig.vAxisTextPositionVol || "in",
+          vAxisGridlines: { count: 3 },
+          maxValue: this.chartConfig.vAxisVol.maxValue,
+          minValue: this.chartConfig.vAxisVol.minValue,
+          }
+        }  
+      }  
+  };
+console.log ("chart-pnl-vol started");
+</script>

@@ -6,7 +6,7 @@
     <link href='//fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Oswald|Material+Icons' rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
-    <title>CultureNewsDigest</title>
+    <title>Bookrunner</title>
     <base target="_top">
     <?!= include('UI/css'); ?>
   </head>
@@ -22,18 +22,22 @@
     <script src="//unpkg.com/vue-router/dist/vue-router.js"></script>
     <script src="//unpkg.com/vuex"></script>
     <script src="//unpkg.com/vuetify/dist/vuetify.js"></script>
+    <script src="//unpkg.com/axios/dist/axios.min.js"></script>
     
     <?!= includeFromGoogleDrive('1YyE28_p0m8iIcv3V6K0L3kWpskEn0Pda'); ?> <!-- vue-google-charts -->
+
     
+    <?!= include('Charts/chart-google-standart'); ?>
+    <?!= include('Charts/chart-pnl-vol'); ?>
+    <?!= include('Charts/chart-bars-2axis'); ?>
+    <?!= include('Charts/google-test'); ?>
     <?!= include('Components/slider-item'); ?>
     <?!= include('Components/toolbar-bookruning'); ?>
     <?!= include('Components/menu-more_vert'); ?>
     <?!= include('Components/dom-card'); ?>
     <?!= include('Components/dom-card-v2'); ?>
+    <?!= include('Components/dom-chart'); ?>
     <?!= include('Components/app-navigation-drawer'); ?>
-    <?!= include('Charts/chart-combo'); ?>
-    <?!= include('Charts/chart-bars-2axis'); ?>
-    <?!= include('Charts/google-test'); ?>
     <?!= include('UI/app-gui'); ?>
     <?!= include('UI/start-page'); ?>
     <?!= include('UI/dom-list'); ?>
@@ -41,6 +45,9 @@
     <?!= include('UI/dom-view-v2'); ?>
     <?!= include('UI/charts-view'); ?>
     <?!= include('Store/fake-dom'); ?>
+    <?!= include('Store/market-data'); ?>
+    <?!= include('Store/okex-data'); ?>
+    <?!= include('Store/okex-socket'); ?>
     <?!= include('Store/main'); ?>
     <?!= include('Vue/router'); ?>
     <?!= include('Vue/app'); ?>

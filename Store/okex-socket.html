@@ -1,0 +1,99 @@
+<script>
+
+        
+var okexSocket = {
+
+  state: {
+    okexSocket: 0,
+    okexSocketIndex: {}, 
+/* Структура динамически создаваемых данных           
+          "коин": "сокет канал",
+          "сокет канал": "коин",
+*/  
+    okexSocketConfig: {
+      autoReconnect: true,
+      timestampInterval: 1000*10,
+      reconnectInterval: 1000,
+      timeoutInterval: 2000
+      },
+    },
+    
+    // Dispatcher
+  getters: {
+    okexSocket (state) {  
+      return state.okexSocket;
+      },
+    okexSocketIndex (state) {  
+      return state.okexSocketIndex;
+      },
+    okexSocketConfig (state) {  
+      return state.okexSocketConfig;
+      },
+       
+    },
+    
+  mutations: {  
+    setOkexSocket (state, socket) {      
+      state.okexSocket = socket;
+      console.log ("setOkexSocket", state.okexSocket);
+      },
+      
+    setOkexSocketIndex (state, idx) {      
+      state.okexSocketIndex[idx.coin] = idx.channel;
+      state.okexSocketIndex[idx.channel] = idx.coin;
+//      console.log ("setOkexSocketIndex", idx);
+      },
+      
+    },
+    
+  actions: {       
+    
+    createOkexIndexChannel ({getters, commit}) {
+      const coins = getters.okexData.futures.coins;
+      const socket = getters.okexSocket;
+      let channel = "";
+
+      for (let instrument of coins) {
+        console.log();
+        channel = "ok_sub_futureusd_" + instrument.name.toLowerCase() + "_index";
+        commit("setOkexSocketIndex", {
+          coin: instrument,
+          channel: channel});
+        socket.send("{'event':'addChannel','channel':'" + channel + "'}");
+        }
+      },  
+  
+    createOkexSocket ({commit, dispatch}) {
+     
+      let socket = new WebSocket("wss://real.okex.com:10440/websocket/okexapi");      
+      socket.onopen = function() { dispatch("createOkexIndexChannel"); };
+      socket.onerror = function(error) { console.log('error', error); };
+      socket.onclose = function(e) { console.log('close', e); };
+      socket.onmessage = function(message) { dispatch("readOkexIndexChannel", message); };
+      console.log ("createOkexSocket", socket);
+      commit("setOkexSocket", socket);
+      },
+       
+    closeOkexSocket ({commit, getters}) {
+      let socket = getters.okexSocket;
+      socket.close();
+      console.log ("closeOkexSocket", socket);
+      },
+       
+    readOkexIndexChannel ({getters, dispatch}, message) {
+      let msgs = JSON.parse(message.data);
+        for (let msg of msgs) {
+          if (getters.okexSocketIndex[msg.channel]) {
+            dispatch("updateOkexIndex", {
+              coin: getters.okexSocketIndex[msg.channel],
+              index: msg.data.futureIndex,
+              timestamp: msg.data.timestamp,
+              });
+            };
+          };
+//      console.log("okexSocketIndex", okexSocketIndex);
+      }, 
+    }, 
+  };
+console.log ("store-okex-socket started");
+</script>

@@ -1,6 +1,6 @@
- <script type="text/x-template" id="chart-combo-template">
+ <script type="text/x-template" id="chart-google-standart-template">
   <GChart
-    type="ComboChart"
+    :type="chartType"
     :data="chartData"
     :options="chartOptions"
   />
@@ -8,26 +8,36 @@
 
 <script>
     
-  var ChartCombo = {
-    template: "#chart-combo-template",
+  var ChartGoogleStandart = {
+    template: "#chart-google-standart-template",
     props: {
-      chartData: Array,
-      chartConfig: Object
+      chartData: {
+        type: [Array, Object],
+        default: () => []
+        },
+      chartType: {
+        type: String,
+        default: () => "Line"
+        },
+      chartConfig: {
+        type: Object,
+        default: () => {}
+        }
         },
     data () {
+      console.log("this.chartConfig", this.chartConfig.vAxis);
       return {    
         chartOptions: {
-          theme: this.chartConfig.theme,
           backgroundColor: this.chartConfig.backgroundColor || 'white', //transparent
 
           height: this.chartConfig.height || 300,
           orientation: this.chartConfig.orientation,
-          isStacked: this.chartConfig.isStacked || false,
+          isStacked: this.chartConfig.isStacked,
           areaOpacity: 0.5,
-          chartArea: {
+          chartArea: this.chartConfig.chartArea || {
             left: 50, right: 50,
             top: 50, bottom: 50,
-            width: '0%',
+            width: '100%',
             height: '70%'
             },
             
@@ -41,7 +51,7 @@
             bold: true,
             },
             
-          legend: {
+          legend: this.chartConfig.legend || {
             maxLines: 2,
             position: 'bottom',
             alignment: 'start',
@@ -51,7 +61,7 @@
             },
             
           series: this.chartConfig.series,
-          seriesType: this.chartConfig.seriesType || 'area',
+          seriesType: this.chartConfig.seriesType,
           vAxes: this.chartConfig.vAxes,
           hAxis: {
             textPosition: this.chartConfig.hAxisTextPosition || "out",
@@ -60,14 +70,18 @@
               }
             },
           vAxis: {
+            format: this.chartConfig.format || "short", 
+            maxValue: this.chartConfig.maxValue,
+            minValue: this.chartConfig.mimValue,
             textPosition: this.chartConfig.vAxisTextPosition || "out",
             textStyle: {
               fontSize: 10,
               },
+            gridlines: this.chartConfig.vAxisGridlines,
             },
           },
         }  
       }  
   };
-console.log ("chart-combo started");
+console.log ("chart-google-standart started");
 </script>

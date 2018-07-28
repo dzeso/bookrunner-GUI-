@@ -1,0 +1,82 @@
+<script>
+
+        
+var marketData = {
+  state: {
+      exchanges: [
+        {name: 'Okex'},
+        ],
+      Okex: {
+        index: [
+/* Структура динамически создаваемых данных           
+          "коин": [ {timestamp: , index: } ],
+*/   
+          ],
+        futures: {
+          groups: [
+            {name: "Weekly", expirationDate: ""},
+            {name: "Bi-weekly", expirationDate: ""},
+            {name: "Quarterly", expirationDate: ""},
+            ],
+/* Структура динамически создаваемых данных           
+          "Группа": {
+            "коин": {
+              hstData: [ 
+                {timestamp: , price: , volMarket: , volTaker:, volMaker:, pnlTaker, pnlMaker} 
+                ],
+              config: 
+                { limitTaker: , limitMaker: , limitTakerMax: , limitMakerMax: , sprdMult: }, -- конфиг читается из файла настройки
+              hstBookrunnerActions: [ {timestamp: , action: , parameters: {}} ],
+              }
+            },
+*/            
+          coins: [
+            {name: 'BTC'},
+            {name: 'LTC'},
+            {name: 'ETH'},
+            {name: 'BCH'},
+            {name: 'XRP'},
+            {name: 'EOS'},
+            ],
+          },
+        spot: {
+          coins: [
+            {name: 'BTC', to: 'USDT'},
+            {name: 'LTC', to: 'USDT'},
+            {name: 'ETH', to: 'USDT'},
+            {name: 'BCH', to: 'USDT'},
+            {name: 'XRP', to: 'USDT'},
+            {name: 'EOS', to: 'USDT'},
+            ],
+/* Структура динамически создаваемых данных           
+          "коин/to": {
+            hstData: [ 
+              {timestamp: , price: , volMarket: , volTaker:, volMaker: , pnlTaker, pnlMaker} 
+              ],
+            config: 
+              { limitTaker:, limitMaker: , limitTakerMax: , limitMakerMax: , sprdMult: }, -- конфиг читается из файла настройки
+            hstBookrunnerActions: [ {timestamp: , action: , parameters: {}} ],
+            },
+*/               
+          }, 
+        }
+    },
+  getters: {
+//    getMarketData (state) {  
+//      return state.marketData;
+//      }, 
+    },
+  mutations: {
+//    setMarketData (state, payload) {
+//       state.marketData = payload;
+//       console.log ("marketData", state.marketData);
+//       },
+    },
+  actions: {       
+//     setTakerLimit ({commit}, takerLimit) {
+//       commit("setTakerLimit", takerLimit);
+//       },
+    },
+  };
+console.log ("store-market_data started");
+</script>

@@ -1,0 +1,116 @@
+<script type="text/x-template" id="dom-chart-template">
+  <v-card class="ma-1">
+    <v-card-title primary-title :class="tradeState[domData.tradeState].color">
+      <v-layout row wrap>
+        <v-flex xs12>
+          <v-layout row wrap>
+            <div :class="styleText.title">{{nmInstrument}}</div>
+            <v-spacer></v-spacer>
+            <div :class="styleText.info">Pos:
+              <span :class="positionColor">{{ Math.abs(domData.position) }}</span> (
+              <span :class="styleText.colorLong">{{ domData.positionLong }}</span> |
+              <span :class="styleText.colorShort">{{ domData.positionShort }}</span>)
+            </div>
+          </v-layout>
+        </v-flex>
+        <v-flex xs12>
+        </v-flex>
+      </v-layout>
+    </v-card-title>
+    <v-card-text :class="styleCard.paddingText">
+      <v-layout row wrap>
+        <v-flex xs12>
+          <chart-pnl-vol
+            :nmInstrument="nmInstrument"
+            :chartConfig="chartPnlVolConfig"
+          /> 
+        </v-flex xs12>
+         <v-flex xs12>
+          <slider-item color="green" :value="domData.takerLimit" step=50 label="taker limit" :min=0 :max="domData.takerMaxLimit" @sliderItemValue="setNewTakerLimit">
+          </slider-item>
+        </v-flex>
+      </v-layout>
+    </v-card-text>
+  </v-card>
+</script>
+
+<script>
+console.log ("DomChart started");
+var DomChart = {
+    template: '#dom-chart-template', 
+    name: 'dom-chart',
+    components: {
+      SliderItem: SliderItem,
+      ToolbarBookruning: ToolbarBookruning,
+      ChartPnlVol: ChartPnlVol,
+      },
+    props: {
+      nmInstrument: String
+      },
+    computed: {
+      domData () {  
+//        console.log("dom-card domData", this.$store.getters.domData[this.nmInstrument]);
+        return this.$store.getters.domData[this.nmInstrument];
+        },
+      hstInstrumentTradeData () {  
+        console.log("dom-chart hstInstrumentTradeData", this.$store.getters.hstInstrumentTradeData, this.nmInstrument);
+        return this.$store.getters.hstInstrumentTradeData[this.nmInstrument] || [];
+        },
+      tradeState () {  
+        return this.$store.getters.tradeState;
+        },
+      instrument () {  
+        const name = this.nmInstrument.slice(0, 3);
+        return this.$store.getters.instruments.find((o,name) => o.name === name);
+        },
+      positionColor () {  
+//        console.log("dom-card positionColor", (this.domData.position < 0) ? this.styleText.colorShort : this.styleText.colorLong);
+        return (this.domData.position < 0) ? this.styleText.colorShort : this.styleText.colorLong;
+        },
+      },
+    methods: {
+      
+      doInstrumentAction (mode) {
+        console.log("doInstrumentAction dom-card", mode);
+        this.$store.dispatch('setTradeState', {
+          instrument: this.nmInstrument,
+          tradeState: mode
+          });
+        },
+        
+      setNewTakerLimit (takerLimit) {
+        console.log("dom-card takerLimit", takerLimit);
+        if (takerLimit) {
+          this.$store.dispatch('setTakerLimit',{
+            instrument: this.nmInstrument,
+            takerLimit: takerLimit
+            });
+          }
+      },
+    },
+  data () {
+    return {
+      styleText: {
+        colorShort: "red--text",
+        colorLong: "green--text",
+        title: "title",
+        info: "body-1",
+        detail: "body-2",       
+        },
+      styleCard: {
+        colorTitle: "",
+        paddingText: "py-0 px-3",
+        title: "subheading",
+        info: "body-1",
+        detail: "body-2",       
+        },
+      chartPnlVolConfig: {    
+        vAxisTextPosition: "in",              
+        vAxisPnl: { format: "short", maxValue: 100, minValue: -50 },
+        vAxisVol: { format: "short", maxValue: 500 },
+        hstDepth: 30
+        },
+        }  
+      }
+    };
+</script>

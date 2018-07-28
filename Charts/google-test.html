@@ -1,5 +1,13 @@
 <script type="text/x-template" id="chart-test-template">
  <div> 
+  <div>
+  <chart-pnl-vol
+    :nmInstrument="nmInstrument"
+    :chartConfig="chartPnlVolConfig"
+  />  
+  </div>
+  <br>
+  <div>
   <GChart
     type="ColumnChart"
     :data="chartData"
@@ -15,31 +23,119 @@
     :data="comboChartData"
     :options="comboOptions"
   />
- </div> 
+ </div>
+</div> 
 </script>
 
 <script>
+// var socket = new WebSocket("wss://real.okex.com:10440/websocket/okexapi"); //удалить 
   var chartTest = {
     template: "#chart-test-template",
     props: {
         },
     components: {
+      ChartPnlVol: ChartPnlVol,
       },
-    filters: {
+    mounted() {
+//      console.log("axios");
+//      axios
+//        .get("https://api.coindesk.com/v1/bpi/currentprice.json")
+//        .then(response => (console.log(response)));
+      
+//      const coins = this.$store.getters.okexData.futures.coins;
+//      console.log("coins", coins);
+//      
+      
+
+
+//socket.onclose = function(event) {
+//  if (event.wasClean) {
+//    alert('Соединение закрыто чисто');
+//  } else {
+//    alert('Обрыв соединения'); // например, "убит" процесс сервера
+//  }
+//  alert('Код: ' + event.code + ' причина: ' + event.reason);
+//};
+
+//  console.log('this.socket', socket);
+//  
+//socket.onerror = function(error) {
+//  console.log('error', error);
+//};
+//
+// socket.onopen = function() {
+//     console.log('open');
+//     socket.send("{'event':'addChannel','channel':'ok_sub_futureusd_btc_index'}");
+// };
+//
+// socket.onmessage = function(e) {
+//     console.log('message', e);
+// };
+//
+// socket.onclose = function(e) {
+//     console.log('close', e);
+// };
+      
+//    const testURL = 'https://www.okex.com/api/v1/future_index.do?symbol=btc_usd';
+//	const myInit = {
+//		method: 'HEAD',
+//		mode: 'no-cors',
+//	};
+//
+//	const myRequest = new Request(testURL, myInit);
+//
+//	fetch(myRequest).then(function(response) {
+//		return response;
+//	}).then(function(response) {
+//		console.log(response);
+//	}).catch(function(e){
+//		console.log(e);
+//	});
+
+//        axios
+//          .get("https://www.okex.com/api/v1/future_index.do?symbol=btc_usd",
+//            { headers: {"Access-Control-Allow-Origin": "*"}, })
+//          .then(response => (console.log(response)));
+          
+      
+//      for (let instrument of coins) {
+//        console.log("https://www.okex.com/api/v1/future_index.do?symbol=" + instrument.name.toLowerCase() + "_usd")
+//        axios
+//          .get("https://www.okex.com/api/v1/future_index.do?symbol=" + instrument.name.toLowerCase() + "_usd",
+//            { headers: {"Access-Control-Allow-Origin": "*"}, })
+//          .then(response => (console.log(response)));
+//        }
       },
+      
+      //'Content-Type': 'application/json', 
+      
     computed: {
+      chartData () {  
+        let data = [];
+        if (this.hstInstrumentTradeData.length>1) data = this.hstInstrumentTradeData.slice(-60,-1);
+        else data = this.hstInstrumentTradeData.slice(-60);
+        while(data.length<60) {
+          data.push([,,,]);
+          }       
+        return ([["time","PnL","volume"]]).concat(data);
+        },
+      hstInstrumentTradeData () {  
+//        console.log("dom-chart hstInstrumentTradeData", this.$store.getters.hstInstrumentTradeData[this.nmInstrument] || []);
+        return this.$store.getters.hstInstrumentTradeData[this.nmInstrument] || [];
+        },
       },
     methods: {
       },
     data () {
       return {    
-        chartData: [
-          ['Year', 'Sales', 'Expenses', 'Profit'],
-          ['2014', 1000, 400, 200],
-          ['2015', 1170, 460, 250],
-          ['2016', 660, 1120, 300],
-          ['2017', 1030, 540, 350]
-          ],
+        nmInstrument: "BTC0928",
+        chartPnlVolConfig: {    
+          vAxisTextPosition: "in",              
+          vAxisPnl: { format: "short", maxValue: 100, minValue: -50 },
+          vAxisVol: { format: "short", maxValue: 500 },
+          hstDepth: 60
+          },
+
         comboChartData: [
           ['Month', 'Bolivia', 'Ecuador', 'Madagascar', 'Papua New Guinea', 'Rwanda', 'Average'],
           ['2004/05',  165,      938,         522,             998,           450,      614.6],

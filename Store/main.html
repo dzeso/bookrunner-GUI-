@@ -6,7 +6,7 @@ Vue.use(Vuex);
 
 var store = new Vuex.Store ({
   state: { 
-    exchanges: {
+    exchangesOld: {
       Okex: {teir: 0, equity: 0, hstEquityDTeir: []}, 
       },
     groups: [
@@ -45,8 +45,8 @@ var store = new Vuex.Store ({
       },
     },
   getters: { 
-    exchanges (state) {  
-       return state.exchanges;
+    exchangesOld (state) {  
+       return state.exchangesOld;
        },
     groups (state) {  
        return state.groups;
@@ -74,18 +74,18 @@ var store = new Vuex.Store ({
       },
     
     updHstEquityDTeir (state, payload) {     
-//      console.log ("updHstEquityDTeir hstEquityDTeir in", payload, state.exchanges[payload.name].hstEquityDTeir);
-//      state.exchanges[payload.name].hstEquityDTeir.shift();
-      state.exchanges[payload.name].hstEquityDTeir.push([payload.date, payload.equity, 0]);
-//      console.log ("updHstEquityDTeir hstEquityDTeir out", payload, state.exchanges[payload.name].hstEquityDTeir);
+//      console.log ("updHstEquityDTeir hstEquityDTeir in", payload, state.exchangesOld[payload.name].hstEquityDTeir);
+//      state.exchangesOld[payload.name].hstEquityDTeir.shift();
+      state.exchangesOld[payload.name].hstEquityDTeir.push([payload.date, payload.equity, 0]);
+//      console.log ("updHstEquityDTeir hstEquityDTeir out", payload, state.exchangesOld[payload.name].hstEquityDTeir);
       },
       
     setExchangeData (state, payload) {
-      state.exchanges[payload.name].teir += payload.dTeir;
-      state.exchanges[payload.name].equity += payload.dEquity;
-      const lastIndex = state.exchanges[payload.name].hstEquityDTeir.length-1;
-      state.exchanges[payload.name].hstEquityDTeir[lastIndex][1] = state.exchanges[payload.name].equity;
-      state.exchanges[payload.name].hstEquityDTeir[lastIndex][2] += payload.dTeir;
+      state.exchangesOld[payload.name].teir += payload.dTeir;
+      state.exchangesOld[payload.name].equity += payload.dEquity;
+      const lastIndex = state.exchangesOld[payload.name].hstEquityDTeir.length-1;
+      state.exchangesOld[payload.name].hstEquityDTeir[lastIndex][1] = state.exchangesOld[payload.name].equity;
+      state.exchangesOld[payload.name].hstEquityDTeir[lastIndex][2] += payload.dTeir;
       },
     
     setGroupData (state, payload) {
@@ -99,25 +99,28 @@ var store = new Vuex.Store ({
      setExchangeData ({commit, state}, payload) {
        const 
          newTime = (new Date()).toTimeString().slice(0,7)+"0",
-         lastIndex = state.exchanges[payload.name].hstEquityDTeir.length-1;
-       let oldTime = (lastIndex<0 ? "" : state.exchanges[payload.name].hstEquityDTeir[lastIndex][0]);
-//       console.log ("setExchangeData", date, state.exchanges);
+         lastIndex = state.exchangesOld[payload.name].hstEquityDTeir.length-1;
+       let oldTime = (lastIndex<0 ? "" : state.exchangesOld[payload.name].hstEquityDTeir[lastIndex][0]);
+//       console.log ("setExchangeData", date, state.exchangesOld);
        if ( newTime != oldTime) {
          commit("updHstEquityDTeir", {
            name: payload.name,
            date: newTime,
-           equity: state.exchanges[payload.name].equity
+           equity: state.exchangesOld[payload.name].equity
            });
          }
-       commit("setExchangeData", payload);
-//       commit('setObjReactive', state.exchanges);
+       else commit("setExchangeData", payload);
+//       commit('setObjReactive', state.exchangesOld);
        },
      setGroupData ({commit}, payload) {
        commit("setGroupData", payload);
        },
     }, 
   modules: {
-    FakeDom
+    FakeDom,
+    marketData,
+    okexData,
+    okexSocket,
     }
 });
 console.log ("store main started");

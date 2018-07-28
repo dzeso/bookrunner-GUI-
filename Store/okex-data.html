@@ -1,0 +1,59 @@
+<script>
+/*todo Вспомогательные функции для работы timestamp*/
+function isNewRecordTime(timestamp) {
+  return (timestamp.new - timestamp.old > timestamp.interval)
+}
+
+var okexData = {
+  state: {
+    },
+    
+  getters: {
+       
+    okexData (state) {  
+//      console.log ("okexData", state, this.store.state.marketData.Okex);
+      return this.store.state.marketData.Okex;
+      }, 
+    },
+    
+  mutations: {  
+      
+    setOkexIndex (state, payload) {
+      const lastIndex = state.okexData.index[payload.coin].length - 1;
+      state.okexData.index[payload.coin][lastIndex] = {
+        timestamp: payload.timestamp,
+        index: payload.index
+        };
+      console.log ("setOkexIndex", payload);
+      },
+    
+    newOkexIndex (state, payload) {
+       state.okexData.index[payload.coin].push({
+         timestamp: payload.timestamp,
+         index: payload.index
+         });
+       console.log ("newOkexIndex", payload);
+       },
+    },
+    
+  actions: {       
+       
+     updateOkexIndex ({getters, commit}, payload) {
+       console.log ("updateOkexIndex", payload, getters.okexData.index[payload.coin]);
+       const oldTimestamp = 0;
+//       if () {
+//         };
+       if (isNewRecordTime({
+         new: payload.timestamp,
+         old: getters.okexData.index[payload.coin].timestamp,
+         interval: getters.okexSocketConfig.timestampInterval, })) {
+         commit("newOkexIndex", payload);  
+         }
+       else {
+         commit("setOkexIndex", payload);  
+         }
+       },  
+    },
+  };
+console.log ("store-okex-data started");
+</script>

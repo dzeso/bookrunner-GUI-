@@ -13,3 +13,10 @@ function include(filename) {
 function includeFromGoogleDrive(id) {
   return "<script>" + DriveApp.getFileById(id).getBlob().getDataAsString() + "</script>";
 }
+
+
+
+function test() {
+var response = UrlFetchApp.fetch("https://www.okex.com/api/v1/future_index.do?symbol=btc_usd/");
+Logger.log(response.getContentText());
+}

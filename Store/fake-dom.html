@@ -2,6 +2,8 @@
 /*todo Вспомогательные функции для работы со стеком
 в дальнейшем их надо перенести в отдельную либу*/
 
+
+
   function addToStack(data) { 
     let arr = data.stack;
     arr.push(data.value);
@@ -34,18 +36,39 @@
         
 var FakeDom = {
   state: {
-    domData: {}
+    domData: {},
+    hstInstrumentTradeData: {}
     },
   getters: {
     domData (state) {  
       return state.domData;
       },
+    hstInstrumentTradeData (state) {  
+      return state.hstInstrumentTradeData;
+      },  
     },
   mutations: {
     setDomData (state, payload) {
        state.domData = payload;
 //       console.log ("setDomData", state.domData);
        },
+       
+     updateHstInstrumentTradeData (state, payload) {
+//       console.log ("updateHstInstrumentTradeData payload, state.hstInstrumentTradeData", payload, state.hstInstrumentTradeData);
+       state.hstInstrumentTradeData[payload.name][payload.lastIndex][1] = payload.pnl;
+       state.hstInstrumentTradeData[payload.name][payload.lastIndex][2] += payload.volMarketTrading;       
+       },    
+     
+     initHstInstrumentTradeData (state, payload) {
+       state.hstInstrumentTradeData[payload] = [];
+//       console.log ("initHstInstrumentTradeData", payload, state.hstInstrumentTradeData[payload]);
+       },   
+       
+     insertHstInstrumentTradeData (state, payload) {
+//       console.log ("insertHstInstrumentTradeData", payload, state.hstInstrumentTradeData[payload.name][payload.lastIndex]);
+       state.hstInstrumentTradeData[payload.name].push(payload.data);
+       },      
+       
      setDomDataInstrument (state, payload) {
        state.domData[payload.name] = payload.data;
 //       console.log ("setDomDataInstrument", state.domData[payload.name]);
@@ -64,7 +87,7 @@ var FakeDom = {
        },
     },
   actions: {
-    initDomData ({commit, getters}) {
+    initDomData ({commit, getters, dispatch}) {
       const data = {};
       let 
         price = 0, 
@@ -96,14 +119,45 @@ var FakeDom = {
             positionShort: 0,
             errPosition: 0,
             takerMaxLimit: instrument.limit,
-            takerLimit: Math.floor(instrument.limit/10)
-          }
-//          console.log(data[instrument.name+group.date]);
-          }
+            takerLimit: Math.floor(instrument.limit/10),
+            };
+          commit("initHstInstrumentTradeData", instrument.name+group.date);
+          };
         }
        commit("setDomData", data);
        commit('setObjReactive', getters.domData);
        },
+       
+    insertHstInstrumentTradeData ({commit, getters}) {
+      let 
+        dVol = 0, 
+        instrumentName = "",
+        lastIndex = 0,
+        newTime = (new Date()).toTimeString().slice(0,7)+"0"; // костыль надо сделать универсальный вариант
+      for (let group of getters.groups) {
+        for (let instrument of getters.instruments) {
+          instrumentName = instrument.name+group.date;
+          lastIndex = getters.hstInstrumentTradeData[instrumentName].length-1;
+          if ( lastIndex < 1 || newTime != getters.hstInstrumentTradeData[instrumentName][lastIndex][0]) {
+            commit('insertHstInstrumentTradeData', {
+              name: instrumentName,
+              data: [
+                newTime, 
+                getters.domData[instrumentName].pnl,
+                Math.random() * getters.domData[instrumentName].volMarketTrading/100,
+                ]
+              });
+            }
+          else commit("updateHstInstrumentTradeData", {
+            name: instrumentName,
+            lastIndex: lastIndex,
+            pnl: getters.domData[instrumentName].pnl,
+            volMarketTrading: Math.random() * getters.domData[instrumentName].volMarketTrading/100,
+            });
+          }
+        }
+        commit('setObjReactive', getters.hstInstrumentTradeData);
+      },
        
     generateFakeDomData ({commit, dispatch, getters}) {
         
@@ -221,7 +275,7 @@ var FakeDom = {
             instrument: nmInstrument,
             tradeState: tradeState
             });
-          }
+           };
 
 //          console.log("generateFakeDomData positions", positionLong, positionShort, dtInstrument.positionLong, dtInstrument.positionShort, errPosition); 
 
@@ -248,12 +302,12 @@ var FakeDom = {
           position: position,
           positionLong: positionLong,
           positionShort: positionShort,
-          errPosition: errPosition
+          errPosition: errPosition,
           }  
           
        if (tradeState != getters.tradeState.reconnect.name) {
          commit("setDomDataInstrument", {name: nmInstrument, data: data});
-//         console.log ("getters.exchanges.Okex", getters.groups[rndGroup].name, dTeir, dEquity);
+//         console.log ("getters.exchangesOld.Okex", getters.groups[rndGroup].name, dTeir, dEquity);
          dispatch("setExchangeData", {name: "Okex", dTeir: dTeir, dEquity: dEquity, lastIndex: 59});
          commit("setGroupData", {name: getters.groups[rndGroup].name, dTeir: dTeir, dEquity: dEquity});
          

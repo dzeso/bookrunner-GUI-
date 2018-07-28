@@ -38,17 +38,22 @@
       },
     created () {
       this.$store.dispatch('initDomData');
+      this.$store.dispatch('createOkexSocket');
     },
     mounted () {
       this.queryAndIndeterminate();
       },
     beforeDestroy () {
-      clearInterval(this.interval);
+      clearInterval(this.intervalDomData);
+      clearInterval(this.intervalHstData);
+      this.$store.dispatch('closeOkexSocket');
+      this.socket.close();
       },
+      
     data: () => ({
       drawer: true,
-      interval: 0,
-      delay: 10,
+      intervalDomData: 0,
+      intervalHstData: 0,
       menu: [
           {name: "Запустить имитацию торгов", mode: "start_generation"}, 
           {name: "Остановить имитацию", mode: "stop_generation"}
@@ -58,16 +63,25 @@
           icon: "keyboard_arrow_up",
           iconAlt: "keyboard_arrow_down",
           text: "Карточки",
-          model: true,
+          model: false,
           children: [
             { icon: "desktop_windows", text: "V1.1", link: "/view/card/v1_1" },
-            { icon: "desktop_windows", text: "V.1.2 (Замечания Ильи)", link: "/view/card/v1_2" },
-            { icon: "desktop_windows", text: "V.2.1 (без тулбара)", link: "/view_v2/card/v2_1" },
-            { icon: "tablet_android", text: "Планшет", link: "" },
-            { icon: "smartphone", text: "Смартфон", link: "" }
+            { icon: "desktop_windows", text: "V1.2 (Замечания Ильи)", link: "/view/card/v1_2" },
+            { icon: "desktop_windows", text: "V2.1 (без тулбара)", link: "/view_v2/card/v2_1" },
           ]
         },
-        { icon: "view_list", text: "Список", link: "/view/list/v3_1" },
+        { 
+          icon: "keyboard_arrow_up",
+          iconAlt: "keyboard_arrow_down",
+          text: "Список",
+          model: true,
+          children: [
+            { icon: "view_list", text: "V2.1 (без тулбара)", link: "/view/list/v2_1" },
+            { icon: "view_list", text: "V3.1 (график пнл)", link: "/view/list/v3_1" },
+          ]
+        },
+//        { icon: "tablet_android", text: "Планшет", link: "" },
+//        { icon: "smartphone", text: "Смартфон", link: "" }
         { icon: "table_chart", text: "Таблица", link: "/review/list" },
         { icon: "view_week", text: "Стаканы", link: "/news/list/all" },
         { icon: "insert_chart", text: "Графики", link: "/view/charts" },
@@ -78,14 +92,22 @@
     methods: {
     
       doAction(item) {
-        if (item.mode == "start_generation") this.queryAndIndeterminate();
-        else if (item.mode == "stop_generation") clearInterval(this.interval);
+        if (item.mode == "start_generation") {
+          this.queryAndIndeterminate();
+          }
+        else if (item.mode == "stop_generation") {
+          clearInterval(this.intervalDomData);
+          clearInterval(this.intervalHstData);
+          }
         },        
         
       queryAndIndeterminate () {
-        this.interval = setInterval(() => {
+        this.intervalDomData = setInterval(() => {
           this.$store.dispatch('generateFakeDomData');
-          }, this.delay)
+          }, 100);
+        this.intervalHstData = setInterval(() => {
+          this.$store.dispatch('insertHstInstrumentTradeData');
+          }, 1000*10);
         },  
       },
   }

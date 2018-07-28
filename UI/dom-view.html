@@ -1,7 +1,7 @@
 <script type="text/x-template" id="dom-view-template">
   <v-card>
       <v-container grid-list-md fluid>
-      <v-layout row wrap v-for="(exchange,name) in exchanges" :key="name">
+      <v-layout row wrap v-for="(exchange,name) in exchangesOld" :key="name">
         <v-flex xs12>
     <v-toolbar>
       <v-toolbar-title class="display-1">{{version}} {{name}} | teir: ₿{{exchange.teir | toBTC | toShort}}, equity: <span :class="equityColor">${{exchange.equity | toUSD}}</span></v-toolbar-title>
@@ -74,14 +74,14 @@
       instruments () {
         return this.$store.getters.instruments;
         },
-      exchanges () {
-        return this.$store.getters.exchanges;
+      exchangesOld () {
+        return this.$store.getters.exchangesOld;
         },
       groups () {
         return this.$store.getters.groups;
         },    
       equityColor () {  
-        return (this.exchanges.Okex.equity < 0) ? "red--text" : "green--text"; /*todo костыль с биржей*/
+        return (this.exchangesOld.Okex.equity < 0) ? "red--text" : "green--text"; /*todo костыль с биржей*/
         },
       },
     methods: {

@@ -23,7 +23,8 @@
           </div>
              <v-layout row wrap>
                 <v-flex v-for="(instrument,i) in instruments" :key="instrument.name" xs12 sm6 md4 lg3 xl2>
-                  <dom-card-v2 :nmInstrument="instrument.name+group.date"></dom-card-v2>                             
+                  <dom-card-v2 v-if="version == 'v2_1'" :nmInstrument="instrument.name+group.date"></dom-card-v2>
+                  <dom-chart v-if="version == 'v3_1'" :nmInstrument="instrument.name+group.date"></dom-chart>
                 </v-flex>
               </v-layout>
         </v-expansion-panel-content>
@@ -38,11 +39,12 @@
     props: {
         version: {
           type: String,
-          default: "v3_1"
+          default: "v2_1"
           },
         },
     components: {
       DomCardV2: DomCardV2,
+      DomChart: DomChart,
       MenuMoreVert: MenuMoreVert,
       },
     filters: {
