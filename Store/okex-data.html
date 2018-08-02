@@ -1,57 +1,114 @@
 <script>
 /*todo Вспомогательные функции для работы timestamp*/
 function isNewRecordTime(timestamp) {
+//  console.log ("isNewRecordTime", timestamp);
   return (timestamp.new - timestamp.old > timestamp.interval)
+}
+function getRecordTime(timestamp) {
+  return new Date(+timestamp-new Date().getTimezoneOffset()*60000).toISOString().slice(0,18);
+}
+
+function getDataFromISODate(payload) {
+  if (payload.mode == "hh:mm") return payload.data.slice(11,16);
+  if (payload.mode == "hh:mm:ss") return payload.data.slice(11,19);
+  return payload.data;
 }
 
 var okexData = {
   state: {
+    index: {
+      array: [],
+/* Структура динамически создаваемых данных           
+          array: [dateTime, index в порядке coinsOrder...],
+          "dateTime": { 
+            { coin: index },
+            },
+*/   
+    },
+    futures: {
+      groups: [
+        {name: "Weekly", expirationDate: ""},
+        {name: "Bi-weekly", expirationDate: ""},
+        {name: "Quarterly", expirationDate: ""},
+        ],
+/* Структура динамически создаваемых данных           
+          "Группа": {
+            "коин": {
+              hstData: [ 
+                {timestamp: , price: , volMarket: , volTaker:, volMaker:, pnlTaker, pnlMaker} 
+                ],
+              config: 
+                { limitTaker: , limitMaker: , limitTakerMax: , limitMakerMax: , sprdMult: }, -- конфиг читается из файла настройки
+              hstBookrunnerActions: [ {timestamp: , action: , parameters: {}} ],
+              }
+            },
+*/            
+      coins: [
+        {name: 'BTC'},
+        {name: 'LTC'},
+        {name: 'ETH'},
+        {name: 'BCH'},
+        {name: 'XRP'},
+        {name: 'EOS'},
+        ],
+      },
+    spot: {
+      coins: [
+        {name: 'BTC', to: 'USDT'},
+        {name: 'LTC', to: 'USDT'},
+        {name: 'ETH', to: 'USDT'},
+        {name: 'BCH', to: 'USDT'},
+        {name: 'XRP', to: 'USDT'},
+        {name: 'EOS', to: 'USDT'},
+        ],
+/* Структура динамически создаваемых данных           
+          "коин/to": {
+            hstData: [ 
+              {timestamp: , price: , volMarket: , volTaker:, volMaker: , pnlTaker, pnlMaker} 
+              ],
+            config: 
+              { limitTaker:, limitMaker: , limitTakerMax: , limitMakerMax: , sprdMult: }, -- конфиг читается из файла настройки
+            hstBookrunnerActions: [ {timestamp: , action: , parameters: {}} ],
+            },
+*/               
+      }, 
     },
     
   getters: {
        
     okexData (state) {  
-//      console.log ("okexData", state, this.store.state.marketData.Okex);
-      return this.store.state.marketData.Okex;
+//      console.log ("okexData", state);
+      return state;
       }, 
     },
     
   mutations: {  
       
     setOkexIndex (state, payload) {
-      const lastIndex = state.okexData.index[payload.coin].length - 1;
-      state.okexData.index[payload.coin][lastIndex] = {
-        timestamp: payload.timestamp,
-        index: payload.index
-        };
-      console.log ("setOkexIndex", payload);
+      state.index[payload.time][payload.coin] = payload.index; // заполняем объектную структуру 
+      state.index.array[state.index.array.length-1][store.getters.coinsOrder[payload.coin]] = +payload.index; // заполняем табличную структуру 
+//      console.log ("setOkexIndex", payload, state.index[payload.time]);
       },
     
     newOkexIndex (state, payload) {
-       state.okexData.index[payload.coin].push({
-         timestamp: payload.timestamp,
-         index: payload.index
-         });
-       console.log ("newOkexIndex", payload);
-       },
+      state.index[payload.time] = {}; // инициализация объектной структуры (индекс - время) 
+      let index = state.index.array.length;
+      state.index.array.push([]); // инициализация табличной структуры. создаем новую строку в таблице
+      state.index.array[index][Object.keys(store.getters.coinsOrder).length] = undefined; // формируем количество колонок по числу валют и 0-ая - для времени
+      state.index.array[index][0] = payload.time; // сохряняем время новой строки
+
+      console.log ("-----------------  newOkexIndex", payload.time, state.index);
+      },
     },
     
   actions: {       
        
      updateOkexIndex ({getters, commit}, payload) {
-       console.log ("updateOkexIndex", payload, getters.okexData.index[payload.coin]);
-       const oldTimestamp = 0;
-//       if () {
-//         };
-       if (isNewRecordTime({
-         new: payload.timestamp,
-         old: getters.okexData.index[payload.coin].timestamp,
-         interval: getters.okexSocketConfig.timestampInterval, })) {
-         commit("newOkexIndex", payload);  
+       if (!getters.okexData.index[payload.time]) {
+         commit("newOkexIndex", payload);
+//         commit('setObjReactive', getters.okexData.index);
          }
-       else {
-         commit("setOkexIndex", payload);  
-         }
+       commit("setOkexIndex", payload);  
        },  
     },
   };

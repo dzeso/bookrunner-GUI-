@@ -1,162 +1,111 @@
 <script type="text/x-template" id="chart-test-template">
  <div> 
-  <div>
-  <chart-pnl-vol
-    :nmInstrument="nmInstrument"
-    :chartConfig="chartPnlVolConfig"
-  />  
-  </div>
-  <br>
-  <div>
-  <GChart
-    type="ColumnChart"
-    :data="chartData"
-    :options="chartOptions"
-  />  
-  <GChart
-    type="LineChart"
-    :data="chartData"
-    :options="chartOptions"
+  <chart-google-standart
+     chartType="LineChart"
+     :chartData="chartData"
+     :chartConfig="chartOptions"
   />
-  <GChart
-    type="ComboChart"
-    :data="comboChartData"
-    :options="comboOptions"
+  <chart-google-standart
+     chartType="AreaChart"
+     :chartData="chartData"
+     :chartConfig="chartOptions1"
   />
- </div>
 </div> 
 </script>
 
 <script>
-// var socket = new WebSocket("wss://real.okex.com:10440/websocket/okexapi"); //удалить 
   var chartTest = {
     template: "#chart-test-template",
+    
     props: {
         },
+    
     components: {
-      ChartPnlVol: ChartPnlVol,
-      },
+       ChartGoogleStandart: ChartGoogleStandart,
+       },
+
     mounted() {
-//      console.log("axios");
-//      axios
-//        .get("https://api.coindesk.com/v1/bpi/currentprice.json")
-//        .then(response => (console.log(response)));
-      
-//      const coins = this.$store.getters.okexData.futures.coins;
-//      console.log("coins", coins);
-//      
-      
-
-
-//socket.onclose = function(event) {
-//  if (event.wasClean) {
-//    alert('Соединение закрыто чисто');
-//  } else {
-//    alert('Обрыв соединения'); // например, "убит" процесс сервера
-//  }
-//  alert('Код: ' + event.code + ' причина: ' + event.reason);
-//};
-
-//  console.log('this.socket', socket);
-//  
-//socket.onerror = function(error) {
-//  console.log('error', error);
-//};
-//
-// socket.onopen = function() {
-//     console.log('open');
-//     socket.send("{'event':'addChannel','channel':'ok_sub_futureusd_btc_index'}");
-// };
-//
-// socket.onmessage = function(e) {
-//     console.log('message', e);
-// };
-//
-// socket.onclose = function(e) {
-//     console.log('close', e);
-// };
-      
-//    const testURL = 'https://www.okex.com/api/v1/future_index.do?symbol=btc_usd';
-//	const myInit = {
-//		method: 'HEAD',
-//		mode: 'no-cors',
-//	};
-//
-//	const myRequest = new Request(testURL, myInit);
-//
-//	fetch(myRequest).then(function(response) {
-//		return response;
-//	}).then(function(response) {
-//		console.log(response);
-//	}).catch(function(e){
-//		console.log(e);
-//	});
-
-//        axios
-//          .get("https://www.okex.com/api/v1/future_index.do?symbol=btc_usd",
-//            { headers: {"Access-Control-Allow-Origin": "*"}, })
-//          .then(response => (console.log(response)));
-          
-      
-//      for (let instrument of coins) {
-//        console.log("https://www.okex.com/api/v1/future_index.do?symbol=" + instrument.name.toLowerCase() + "_usd")
-//        axios
-//          .get("https://www.okex.com/api/v1/future_index.do?symbol=" + instrument.name.toLowerCase() + "_usd",
-//            { headers: {"Access-Control-Allow-Origin": "*"}, })
-//          .then(response => (console.log(response)));
-//        }
+      for (let coin in this.$store.getters.coinsOrder) {
+        this.chartDataHeader[this.$store.getters.coinsOrder[coin]] = coin;
+        this.chartDataLastValue[this.$store.getters.coinsOrder[coin]] = 0;
+      };  
+//      console.log("this.chartDataHeader", this.chartDataHeader);
+      const lastColimnNumber = this.chartDataCache[0].length - 1;
+      this.chartDataCache[0] = this.chartDataHeader;
+//      console.log("this.chartDataCache", this.chartDataCache);
+      for (let i=1; i<=this.chartDataDepth; i++) { 
+        this.chartDataCache[i]=[];
+        this.chartDataCache[i][0]="";
+        this.chartDataCache[i][lastColimnNumber]=undefined;
+        }
+//      console.log("this.chartDataCache", this.chartDataCache);
       },
-      
-      //'Content-Type': 'application/json', 
       
     computed: {
       chartData () {  
-        let data = [];
-        if (this.hstInstrumentTradeData.length>1) data = this.hstInstrumentTradeData.slice(-60,-1);
-        else data = this.hstInstrumentTradeData.slice(-60);
-        while(data.length<60) {
-          data.push([,,,]);
-          }       
-        return ([["time","PnL","volume"]]).concat(data);
+//        console.log("this.hstIndexData", this.hstIndexData);
+        console.log("Индексы chartDataCacheIndex и hstIndexData.length", this.chartDataCacheIndex, this.hstIndexData.length);
+        const lastColimnNumber = this.chartDataHeader.length-1;
+        while (this.hstIndexData.length > this.chartDataCacheIndex) {
+          let dataRow = [];
+          let currentValue = 0;
+          this.chartDataCache.shift();
+          dataRow[0] = getDataFromISODate({data: this.hstIndexData[ this.chartDataCacheIndex ][0], mode: "hh:mm:ss"}); // вставляем дату
+          for (let i=1; i<=lastColimnNumber; i++) { // вставляем нормализованные значения
+            currentValue = this.hstIndexData[ this.chartDataCacheIndex ][i];
+            if (currentValue) {
+              if (!this.chartDataNormalizeBase[i]) {
+                this.chartDataNormalizeBase[i] = currentValue; // фиксируем базу нормализации если ее еще нет
+                }
+              dataRow [i] = {
+                f: currentValue,
+                v: (currentValue/this.chartDataNormalizeBase[i] - 1)*1000,
+                }
+              this.chartDataLastValue [i] = dataRow [i];
+              }
+            else {
+              dataRow [i] = this.chartDataLastValue [i];
+            }
+//            console.log("Нормализов, ", dataRow [i], this.chartDataLastValue [i]);
+            }
+          this.chartDataCache.push(dataRow);
+          this.chartDataCacheIndex++;
+        };
+        this.chartDataCache[0] = this.chartDataHeader;
+//        console.log("this.chartDataCache", this.chartDataCache);
+        return this.chartDataCache;
         },
-      hstInstrumentTradeData () {  
+        
+      hstIndexData () {  
 //        console.log("dom-chart hstInstrumentTradeData", this.$store.getters.hstInstrumentTradeData[this.nmInstrument] || []);
-        return this.$store.getters.hstInstrumentTradeData[this.nmInstrument] || [];
+        return this.$store.getters.okexData.index.array || [];
         },
       },
     methods: {
       },
     data () {
       return {    
-        nmInstrument: "BTC0928",
-        chartPnlVolConfig: {    
-          vAxisTextPosition: "in",              
-          vAxisPnl: { format: "short", maxValue: 100, minValue: -50 },
-          vAxisVol: { format: "short", maxValue: 500 },
-          hstDepth: 60
-          },
+        chartDataCache: [],
+        chartDataCacheIndex: 0,
+        chartDataNormalizeBase: [],
+        chartDataNormalizeDelta: [],
+        chartDataLastValue: [],
+        chartDataHeader: ["time"],
+        chartDataDepth: 60,
 
-        comboChartData: [
-          ['Month', 'Bolivia', 'Ecuador', 'Madagascar', 'Papua New Guinea', 'Rwanda', 'Average'],
-          ['2004/05',  165,      938,         522,             998,           450,      614.6],
-          ['2005/06',  135,      1120,        599,             1268,          288,      682],
-          ['2006/07',  157,      1167,        587,             807,           397,      623],
-          ['2007/08',  139,      1110,        615,             968,           215,      609.4],
-          ['2008/09',  136,      691,         629,             1026,          366,      569.6]
-          ],
-        comboOptions: {
-          title : 'Monthly Coffee Production by Country',
-          vAxis: {title: 'Cups'},
-          hAxis: {title: 'Month'},
-          seriesType: 'bars',
-          series: {5: {type: 'line'}}
+        chartOptions: { 
+          height: 400,
+          curveType: 'none',
+          vAxisLogscale: true,
+          vAxisScaleType: "mirrorLog",
+          interpolateNulls: true,
           },
-        chartOptions: {
-          chart: {
-            title: 'Company Performance',
-         	 subtitle: 'Sales, Expenses, and Profit: 2014-2017',
-        	}
-      	  }
+        chartOptions1: { 
+          height: 400,
+          curveType: 'none',
+          vAxisLogscale: false,
+          interpolateNulls: true,
+          },
        }  
     }
   };

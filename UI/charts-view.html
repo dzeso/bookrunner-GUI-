@@ -52,8 +52,8 @@
     computed: {
       chartsData () {  
         let data = [];
-        if (this.$store.getters.exchanges.Okex.hstEquityDTeir.length>1) data = this.$store.getters.exchanges.Okex.hstEquityDTeir.slice(-60,-1);
-        else data = this.$store.getters.exchanges.Okex.hstEquityDTeir.slice(-60);
+        if (this.$store.getters.exchangesOld.Okex.hstEquityDTeir.length>1) data = this.$store.getters.exchangesOld.Okex.hstEquityDTeir.slice(-60,-1);
+        else data = this.$store.getters.exchangesOld.Okex.hstEquityDTeir.slice(-60);
         while(data.length<60) {
           data.push([,,,]);
           }

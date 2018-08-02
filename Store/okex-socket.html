@@ -12,7 +12,7 @@ var okexSocket = {
 */  
     okexSocketConfig: {
       autoReconnect: true,
-      timestampInterval: 1000*10,
+      timestampInterval: 1000*60,
       reconnectInterval: 1000,
       timeoutInterval: 2000
       },
@@ -54,10 +54,9 @@ var okexSocket = {
       let channel = "";
 
       for (let instrument of coins) {
-        console.log();
         channel = "ok_sub_futureusd_" + instrument.name.toLowerCase() + "_index";
         commit("setOkexSocketIndex", {
-          coin: instrument,
+          coin: instrument.name,
           channel: channel});
         socket.send("{'event':'addChannel','channel':'" + channel + "'}");
         }
@@ -65,7 +64,8 @@ var okexSocket = {
   
     createOkexSocket ({commit, dispatch}) {
      
-      let socket = new WebSocket("wss://real.okex.com:10440/websocket/okexapi");      
+      let socket = new ReconnectingWebSocket("wss://real.okex.com:10440/websocket/okexapi");      
+      socket.debug = true;      
       socket.onopen = function() { dispatch("createOkexIndexChannel"); };
       socket.onerror = function(error) { console.log('error', error); };
       socket.onclose = function(e) { console.log('close', e); };
@@ -87,7 +87,7 @@ var okexSocket = {
             dispatch("updateOkexIndex", {
               coin: getters.okexSocketIndex[msg.channel],
               index: msg.data.futureIndex,
-              timestamp: msg.data.timestamp,
+              time: getRecordTime(msg.data.timestamp),
               });
             };
           };

@@ -34,12 +34,14 @@
           orientation: this.chartConfig.orientation,
           isStacked: this.chartConfig.isStacked,
           areaOpacity: 0.5,
+          interpolateNulls: this.chartConfig.interpolateNulls,
           chartArea: this.chartConfig.chartArea || {
             left: 50, right: 50,
             top: 50, bottom: 50,
             width: '100%',
             height: '70%'
             },
+          curveType: this.chartConfig.curveType,
             
           
           fontName: this.chartConfig.fontName || 'Oswald',
@@ -78,6 +80,8 @@
               fontSize: 10,
               },
             gridlines: this.chartConfig.vAxisGridlines,
+            logscale: this.chartConfig.vAxisLogscale,
+            scaleType: this.chartConfig.vAxisScaleType,
             },
           },
         }  
