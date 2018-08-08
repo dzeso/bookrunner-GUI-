@@ -12,7 +12,6 @@ var okexSocket = {
 */  
     okexSocketConfig: {
       autoReconnect: true,
-      timestampInterval: 1000*60,
       reconnectInterval: 1000,
       timeoutInterval: 2000
       },
@@ -35,7 +34,7 @@ var okexSocket = {
   mutations: {  
     setOkexSocket (state, socket) {      
       state.okexSocket = socket;
-      console.log ("setOkexSocket", state.okexSocket);
+//      console.log ("setOkexSocket", state.okexSocket);
       },
       
     setOkexSocketIndex (state, idx) {      
@@ -87,7 +86,10 @@ var okexSocket = {
             dispatch("updateOkexIndex", {
               coin: getters.okexSocketIndex[msg.channel],
               index: msg.data.futureIndex,
-              time: getRecordTime(msg.data.timestamp),
+              time: getISODateFromStamp({
+                timestamp: msg.data.timestamp,
+                mode: getters.okexData.config.frameTimeMode
+                }),
               });
             };
           };

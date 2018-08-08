@@ -27,71 +27,95 @@
     mounted() {
       for (let coin in this.$store.getters.coinsOrder) {
         this.chartDataHeader[this.$store.getters.coinsOrder[coin]] = coin;
-        this.chartDataLastValue[this.$store.getters.coinsOrder[coin]] = 0;
-      };  
-//      console.log("this.chartDataHeader", this.chartDataHeader);
-      const lastColimnNumber = this.chartDataCache[0].length - 1;
-      this.chartDataCache[0] = this.chartDataHeader;
-//      console.log("this.chartDataCache", this.chartDataCache);
-      for (let i=1; i<=this.chartDataDepth; i++) { 
+        this.chartDataCache[0][this.$store.getters.coinsOrder[coin]] = {
+                f: 0,
+                v: 0, 
+                };
+      }; 
+      
+      this.chartDataCache[0][0] = getTimeFromISODate({date: (new Date).toISOString(), mode: this.chartDataTimeMode}); // todo 
+      
+      for (let i=1; i<this.chartDataDepth; i++) { 
         this.chartDataCache[i]=[];
         this.chartDataCache[i][0]="";
-        this.chartDataCache[i][lastColimnNumber]=undefined;
+        this.chartDataCache[i][this.chartDataHeader.length - 1]=undefined;
         }
 //      console.log("this.chartDataCache", this.chartDataCache);
       },
       
     computed: {
       chartData () {  
-//        console.log("this.hstIndexData", this.hstIndexData);
-        console.log("Индексы chartDataCacheIndex и hstIndexData.length", this.chartDataCacheIndex, this.hstIndexData.length);
-        const lastColimnNumber = this.chartDataHeader.length-1;
-        while (this.hstIndexData.length > this.chartDataCacheIndex) {
-          let dataRow = [];
-          let currentValue = 0;
-          this.chartDataCache.shift();
-          dataRow[0] = getDataFromISODate({data: this.hstIndexData[ this.chartDataCacheIndex ][0], mode: "hh:mm:ss"}); // вставляем дату
-          for (let i=1; i<=lastColimnNumber; i++) { // вставляем нормализованные значения
-            currentValue = this.hstIndexData[ this.chartDataCacheIndex ][i];
-            if (currentValue) {
-              if (!this.chartDataNormalizeBase[i]) {
-                this.chartDataNormalizeBase[i] = currentValue; // фиксируем базу нормализации если ее еще нет
-                }
-              dataRow [i] = {
+//        console.log("chartData обновление", this.hstIndexData);
+        if (!this.hstIndexData.firstRecord) return [this.chartDataHeader];
+
+        let
+          firstRecord = this.hstIndexData.firstRecord,
+          lastRecord = this.hstIndexData.lastRecord;
+          
+        if (!this.chartDataLastMoment && firstRecord) {
+          this.chartDataLastMoment = firstRecord;
+//          console.log("this.hstIndexData.firstRecord", firstRecord);
+          }
+        let currentMoment = this.chartDataLastMoment;
+        while (currentMoment < lastRecord) {
+          let nextMoment = getNextMoment({
+            date: currentMoment,
+            mode: this.chartDataTimeMode}
+            );
+          if (this.hstIndexData [currentMoment]) {
+            console.log("this.chartDataCacheIndex", this.chartDataCacheIndex);
+            console.log("this.chartDataDepth", this.chartDataDepth);
+            if ( this.chartDataCacheIndex >= this.chartDataDepth) {
+              console.log("this.chartDataCache.length - last", this.chartDataCache.length);
+              this.chartDataCache.push([]);
+              console.log("this.chartDataCache.length", this.chartDataCache.length);
+              this.chartDataCache[this.chartDataCacheIndex][this.chartDataHeader.length - 1] = undefined;
+              };
+            console.log("this.chartDataCache", this.chartDataCache);
+            this.chartDataCache[this.chartDataCacheIndex][0] =  getTimeFromISODate({date: currentMoment, mode: this.chartDataTimeMode}); // вставляем дату
+            
+            for (let coin in this.hstIndexData [currentMoment]) {
+              let coinIndex = this.$store.getters.coinsOrder[coin];
+              let currentValue = this.hstIndexData [currentMoment][coin];
+              if (!this.chartDataNormalizeBase[coinIndex]) this.chartDataNormalizeBase[coinIndex] = currentValue; // фиксируем базу нормализации если ее еще нет
+              let normalizedValue = (currentValue/this.chartDataNormalizeBase[coinIndex] - 1)*10000; // todo в функцию             
+              
+              this.chartDataCache[this.chartDataCacheIndex][coinIndex] = {
                 f: currentValue,
-                v: (currentValue/this.chartDataNormalizeBase[i] - 1)*1000,
-                }
-              this.chartDataLastValue [i] = dataRow [i];
-              }
-            else {
-              dataRow [i] = this.chartDataLastValue [i];
+                v: normalizedValue, 
+                };
+              }; 
+            this.chartDataCacheIndex++;
+            this.chartDataLastMoment = nextMoment; 
             }
-//            console.log("Нормализов, ", dataRow [i], this.chartDataLastValue [i]);
-            }
-          this.chartDataCache.push(dataRow);
-          this.chartDataCacheIndex++;
-        };
-        this.chartDataCache[0] = this.chartDataHeader;
-//        console.log("this.chartDataCache", this.chartDataCache);
-        return this.chartDataCache;
+          else {
+            console.log("В базе нет", currentMoment);
+            };
+          currentMoment = nextMoment;
+          };
+        // todo - херота! надо рассчитывать, чтоб показывались последние chartDataDepth значений 
+//        console.log("chartData", this.chartDataCache.slice(this.chartDataCache.length-this.chartDataDepth));
+        return [this.chartDataHeader].concat(this.chartDataCache.slice(this.chartDataCache.length-this.chartDataDepth));
         },
         
       hstIndexData () {  
 //        console.log("dom-chart hstInstrumentTradeData", this.$store.getters.hstInstrumentTradeData[this.nmInstrument] || []);
-        return this.$store.getters.okexData.index.array || [];
+        return this.$store.getters.okexData.index || {};
+        },
+      chartDataTimeMode () {  
+        return this.$store.getters.okexData.config.frameTimeMode;
         },
       },
     methods: {
       },
     data () {
       return {    
-        chartDataCache: [],
+        chartDataCache: [[]],
+        chartDataLastMoment: 0,
         chartDataCacheIndex: 0,
         chartDataNormalizeBase: [],
-        chartDataNormalizeDelta: [],
-        chartDataLastValue: [],
         chartDataHeader: ["time"],
-        chartDataDepth: 60,
+        chartDataDepth: 30,
 
         chartOptions: { 
           height: 400,
@@ -101,6 +125,7 @@
           interpolateNulls: true,
           },
         chartOptions1: { 
+          title: "Изменение курсов в ‱",
           height: 400,
           curveType: 'none',
           vAxisLogscale: false,

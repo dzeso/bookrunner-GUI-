@@ -24,6 +24,10 @@ var router = new VueRouter ({
       component: chartsView,
       props: true
     },
+    { path: '/view/charts/test',
+      component: chartTest,
+      props: true
+    },
     { path: '*', redirect: '/view/charts' }
   ]
 });

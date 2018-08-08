@@ -47,7 +47,7 @@
       clearInterval(this.intervalDomData);
       clearInterval(this.intervalHstData);
       this.$store.dispatch('closeOkexSocket');
-      this.socket.close();
+//      this.socket.close();
       },
       
     data: () => ({
@@ -56,7 +56,9 @@
       intervalHstData: 0,
       menu: [
           {name: "Запустить имитацию торгов", mode: "start_generation"}, 
-          {name: "Остановить имитацию", mode: "stop_generation"}
+          {name: "Остановить имитацию", mode: "stop_generation"},
+          {name: "Получать данные с Окекса", mode: "open_socket"}, 
+          {name: "Остановить получение данных", mode: "close_socket"}
         ],
       drawerList: [
         { 
@@ -84,7 +86,16 @@
 //        { icon: "smartphone", text: "Смартфон", link: "" }
         { icon: "table_chart", text: "Таблица", link: "/review/list" },
         { icon: "view_week", text: "Стаканы", link: "/news/list/all" },
-        { icon: "insert_chart", text: "Графики", link: "/view/charts" },
+        { 
+          icon: "keyboard_arrow_up",
+          iconAlt: "keyboard_arrow_down",
+          text: "Графики",
+          model: true,
+          children: [
+            { icon: "insert_chart", text: "Варианты графиков", link: "/view/charts" },
+            { icon: "insert_chart", text: "Отладочный", link: "/view/charts/test" },
+          ]
+        },
         ]
       }),
     computed: {
@@ -98,6 +109,12 @@
         else if (item.mode == "stop_generation") {
           clearInterval(this.intervalDomData);
           clearInterval(this.intervalHstData);
+          }
+        else if (item.mode == "close_socket") {
+          this.$store.dispatch('closeOkexSocket');
+          }
+        else if (item.mode == "open_socket") {
+          this.$store.dispatch('createOkexSocket');
           }
         },        
         

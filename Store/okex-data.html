@@ -1,36 +1,47 @@
 <script>
-/*todo Вспомогательные функции для работы timestamp*/
-function isNewRecordTime(timestamp) {
-//  console.log ("isNewRecordTime", timestamp);
-  return (timestamp.new - timestamp.old > timestamp.interval)
-}
-function getRecordTime(timestamp) {
-  return new Date(+timestamp-new Date().getTimezoneOffset()*60000).toISOString().slice(0,18);
-}
-
-function getDataFromISODate(payload) {
-  if (payload.mode == "hh:mm") return payload.data.slice(11,16);
-  if (payload.mode == "hh:mm:ss") return payload.data.slice(11,19);
-  return payload.data;
-}
 
 var okexData = {
   state: {
+    config: {
+      frameTimeMode: "hh:mm",
+      },
     index: {
-      array: [],
+      firstRecord: 0,
+      lastRecord: 0,
 /* Структура динамически создаваемых данных           
-          array: [dateTime, index в порядке coinsOrder...],
           "dateTime": { 
             { coin: index },
             },
 */   
     },
     futures: {
-      groups: [
-        {name: "Weekly", expirationDate: ""},
-        {name: "Bi-weekly", expirationDate: ""},
-        {name: "Quarterly", expirationDate: ""},
-        ],
+      groups: {
+        this_week: {
+          name: "Weekly", 
+//          expirationDate: ""
+/* Структура динамически создаваемых данных           
+          contractMarketPrice: {
+            "dateTime": { 
+               coin: {
+                 "limitHigh": "1030.3",
+                 "vol": 276406,
+                 "last": 998.05,
+                 "sell": 998.05,
+                 "buy": 997.61,
+                 "unitAmount": 100,
+                 "hold_amount": 180178,
+                 "contractId": 20170324034,
+                 "high": 1049.18,
+                 "low": 973.15,
+                 "limitLow": "968.1"},
+                 },
+                 */  
+          },
+        next_week: {name: "Bi-weekly", 
+          },
+        quarter: {name: "Quarterly", 
+          },
+        },
 /* Структура динамически создаваемых данных           
           "Группа": {
             "коин": {
@@ -86,18 +97,16 @@ var okexData = {
       
     setOkexIndex (state, payload) {
       state.index[payload.time][payload.coin] = payload.index; // заполняем объектную структуру 
-      state.index.array[state.index.array.length-1][store.getters.coinsOrder[payload.coin]] = +payload.index; // заполняем табличную структуру 
+//      Vue.set(state.index[payload.time], payload.coin, payload.index);
 //      console.log ("setOkexIndex", payload, state.index[payload.time]);
       },
     
     newOkexIndex (state, payload) {
-      state.index[payload.time] = {}; // инициализация объектной структуры (индекс - время) 
-      let index = state.index.array.length;
-      state.index.array.push([]); // инициализация табличной структуры. создаем новую строку в таблице
-      state.index.array[index][Object.keys(store.getters.coinsOrder).length] = undefined; // формируем количество колонок по числу валют и 0-ая - для времени
-      state.index.array[index][0] = payload.time; // сохряняем время новой строки
-
-      console.log ("-----------------  newOkexIndex", payload.time, state.index);
+//      state.index[payload.time] = {}; // инициализация объектной структуры (индекс - время) 
+      Vue.set(state.index, payload.time, {});
+      if (!state.index.firstRecord) state.index.firstRecord = payload.time;
+      state.index.lastRecord = payload.time;        
+//      console.log ("-----------------  newOkexIndex", payload.time, state.index);
       },
     },
     
