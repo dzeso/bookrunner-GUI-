@@ -5,30 +5,35 @@ var okexSocket = {
 
   state: {
     okexSocket: 0,
-    okexSocketIndex: {}, 
-/* Структура динамически создаваемых данных           
-          "коин": "сокет канал",
-          "сокет канал": "коин",
-*/  
+    okexSocketIndex: {
+      channelType: {
+        marketPrice: "marketPrice", 
+        index: "index"},
+      /* Структура динамически создаваемых в okexSocketIndex данных           
+          "сокет канал": {
+            channelType: ,
+            "data": 
+      */
+      },
     okexSocketConfig: {
+      futuresPrefix: "ok_sub_futureusd_",
       autoReconnect: true,
       reconnectInterval: 1000,
       timeoutInterval: 2000
       },
     },
     
-    // Dispatcher
   getters: {
     okexSocket (state) {  
       return state.okexSocket;
       },
+      
     okexSocketIndex (state) {  
       return state.okexSocketIndex;
       },
     okexSocketConfig (state) {  
       return state.okexSocketConfig;
       },
-       
     },
     
   mutations: {  
@@ -38,53 +43,66 @@ var okexSocket = {
       },
       
     setOkexSocketIndex (state, idx) {      
-      state.okexSocketIndex[idx.coin] = idx.channel;
-      state.okexSocketIndex[idx.channel] = idx.coin;
+      state.okexSocketIndex[idx.channel] = idx.data;
 //      console.log ("setOkexSocketIndex", idx);
       },
       
     },
     
   actions: {       
-    
-    createOkexIndexChannel ({getters, commit}) {
-      const coins = getters.okexData.futures.coins;
-      const socket = getters.okexSocket;
-      let channel = "";
 
-      for (let instrument of coins) {
-        channel = "ok_sub_futureusd_" + instrument.name.toLowerCase() + "_index";
-        commit("setOkexSocketIndex", {
-          coin: instrument.name,
-          channel: channel});
-        socket.send("{'event':'addChannel','channel':'" + channel + "'}");
-        }
-      },  
-  
     createOkexSocket ({commit, dispatch}) {
-     
       let socket = new ReconnectingWebSocket("wss://real.okex.com:10440/websocket/okexapi");      
       socket.debug = true;      
-      socket.onopen = function() { dispatch("createOkexIndexChannel"); };
+      socket.onopen = function() { dispatch("createOkexSocketChannels"); };
       socket.onerror = function(error) { console.log('error', error); };
       socket.onclose = function(e) { console.log('close', e); };
-      socket.onmessage = function(message) { dispatch("readOkexIndexChannel", message); };
-      console.log ("createOkexSocket", socket);
+      socket.onmessage = function(message) { dispatch("readOkexSocketChannels", message); };
       commit("setOkexSocket", socket);
       },
-       
+    
+    createOkexSocketChannels ({dispatch}) {
+      dispatch("createOkexOkexIndexChannels");
+      dispatch("createOkexOkexMarketPriceChannels");
+      },
+      
+    readOkexSocketChannels ({getters, dispatch}, message) {
+      let data = JSON.parse(message.data);
+      dispatch("readOkexIndexChannel", data);
+      dispatch("readOkexMarketPriceChannel", data);
+      }, 
+      
     closeOkexSocket ({commit, getters}) {
+    
       let socket = getters.okexSocket;
       socket.close();
       console.log ("closeOkexSocket", socket);
       },
-       
-    readOkexIndexChannel ({getters, dispatch}, message) {
-      let msgs = JSON.parse(message.data);
-        for (let msg of msgs) {
-          if (getters.okexSocketIndex[msg.channel]) {
+      
+/* Данные для Okex.index*/     
+
+    createOkexOkexIndexChannels ({getters, commit}) {
+      const coins = getters.okexData.futures.coins;
+      const socket = getters.okexSocket;
+      const channelType = getters.okexSocketIndex.channelType;
+      let channel = "";
+
+      for (let instrument of coins) {
+        channel = getters.okexSocketConfig.futuresPrefix + instrument.name.toLowerCase() + "_index";
+        commit("setOkexSocketIndex", {
+          data: {
+            channelType: channelType.index,
+            coin: instrument.name},
+          channel: channel});
+        socket.send("{'event':'addChannel','channel':'" + channel + "'}");
+        }
+      },  
+      
+    readOkexIndexChannel ({getters, dispatch}, data) {
+        for (let msg of data) {
+          if (getters.okexSocketIndex[msg.channel] && getters.okexSocketIndex[msg.channel].channelType == getters.okexSocketIndex.channelType.index) {
             dispatch("updateOkexIndex", {
-              coin: getters.okexSocketIndex[msg.channel],
+              coin: getters.okexSocketIndex[msg.channel].coin,
               index: msg.data.futureIndex,
               time: getISODateFromStamp({
                 timestamp: msg.data.timestamp,
@@ -93,8 +111,50 @@ var okexSocket = {
               });
             };
           };
-//      console.log("okexSocketIndex", okexSocketIndex);
-      }, 
+//      console.log("okexSocketIndex", getters.okexSocketIndex);
+      },
+
+/* Данные для Okex.futures.groups["имя группы"].contractMarketPrice */     
+
+    createOkexOkexMarketPriceChannels ({getters, commit}) {
+      const coins = getters.okexData.futures.coins;
+      const groups = getters.okexData.futures.groups;
+      const socket = getters.okexSocket;
+      const channelType = getters.okexSocketIndex.channelType;
+      let channel = "";
+
+      for (let group in groups) {
+        for (let instrument of coins) {
+          channel = getters.okexSocketConfig.futuresPrefix + instrument.name.toLowerCase() + "_ticker_" + group;
+          commit("setOkexSocketIndex", {
+            data: { 
+              channelType: channelType.marketPrice,
+              group: group,
+              instrument: instrument.name,
+              },
+            channel: channel});
+          socket.send("{'event':'addChannel','channel':'" + channel + "'}");
+          }
+        }
+      },  
+      
+    readOkexMarketPriceChannel ({getters, dispatch}, data) {
+        for (let msg of data) {
+          if (getters.okexSocketIndex[msg.channel] && getters.okexSocketIndex[msg.channel].channelType == getters.okexSocketIndex.channelType.marketPrice) {
+            dispatch("updateOkexMarketPrice", {
+              instrument: getters.okexSocketIndex[msg.channel].instrument,
+              group: getters.okexSocketIndex[msg.channel].group,
+              data: msg.data,
+              time: getISODateFromStamp({
+                timestamp: Date.now(),
+                mode: getters.okexData.config.frameTimeMode
+                }),
+              });
+            };
+          };
+//      console.log("readOkexMarketPriceChannel", getters.okexData.contractMarketPrice);
+      },
+      
     }, 
   };
 console.log ("store-okex-socket started");

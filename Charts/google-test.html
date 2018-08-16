@@ -2,13 +2,13 @@
  <div> 
   <chart-google-standart
      chartType="LineChart"
-     :chartData="chartData"
+     :chartData="chartIndexData"
      :chartConfig="chartOptions"
   />
   <chart-google-standart
      chartType="AreaChart"
-     :chartData="chartData"
-     :chartConfig="chartOptions1"
+     :chartData="chartIndexData"
+     :chartConfig="chartIndexConfig"
   />
 </div> 
 </script>
@@ -25,97 +25,223 @@
        },
 
     mounted() {
-      for (let coin in this.$store.getters.coinsOrder) {
-        this.chartDataHeader[this.$store.getters.coinsOrder[coin]] = coin;
-        this.chartDataCache[0][this.$store.getters.coinsOrder[coin]] = {
-                f: 0,
-                v: 0, 
-                };
-      }; 
       
-      this.chartDataCache[0][0] = getTimeFromISODate({date: (new Date).toISOString(), mode: this.chartDataTimeMode}); // todo 
-      
-      for (let i=1; i<this.chartDataDepth; i++) { 
-        this.chartDataCache[i]=[];
-        this.chartDataCache[i][0]="";
-        this.chartDataCache[i][this.chartDataHeader.length - 1]=undefined;
+      let 
+        startTime = getISODateFromStamp({
+          timestamp: Date.now(),
+          mode: this.chartTimeMode
+        });
+        
+//      console.log("startTime", startTime);
+//      console.log("getTimeFromISODate startTime", getTimeFromISODate({
+//               date: startTime, 
+//               mode: this.chartTimeMode
+//             }));
+      this.chartIndex.header = getIndexAsArray(this.coinsIndex);
+      this.chartIndex.header[0] = "time";
+      this.chartIndex.lastRecord = startTime;
+      this.chartIndex.cacheData = getEmptyChartArray({
+        colsNumber: this.chartIndex.header.length,
+        rowsNumber: this.chartIndex.depth,
+        firstRowVal: { 
+          f: getTimeFromISODate({
+               date: startTime, 
+               mode: this.chartTimeMode
+             }),
+          a: { f: 0, v: 0, },
+        },
+        rowsVal: {
+          f: "",
+          a: undefined
         }
-//      console.log("this.chartDataCache", this.chartDataCache);
+      });
+      
+      console.log("------ инит this.chartIndex.depth", this.chartIndex.depth);
+      console.log("------ инит this.chartIndex.cacheData", this.chartIndex.cacheData);
+
+      this.chartContractMarketPrice.header = getIndexAsArray(this.coinsIndex);
+      
+      for (let group in this.groups) {
+        this.chartContractMarketPrice[group] = {};
+        this.chartContractMarketPrice[group].lastRecord = startTime;
+        this.chartContractMarketPrice[group].cacheIndex = 0;
+        this.chartContractMarketPrice[group].cacheData = getEmptyChartArray({
+        colsNumber: this.chartContractMarketPrice.header.length,
+        rowsNumber: this.chartContractMarketPrice.depth,
+        firstRowVal: { 
+          f: getTimeFromISODate({
+               date: startTime, 
+               mode: this.chartTimeMode
+             }),
+          a: { f: 0, v: 0, }
+          },
+        rowsVal: {
+          f: "",
+          a: undefined}
+        });
+        } 
+
+      console.log("------ инит this.chartIndex", this.chartIndex);
+      console.log("this.chartContractMarketPrice", this.chartContractMarketPrice);
       },
       
     computed: {
-      chartData () {  
-//        console.log("chartData обновление", this.hstIndexData);
-        if (!this.hstIndexData.firstRecord) return [this.chartDataHeader];
-
-        let
-          firstRecord = this.hstIndexData.firstRecord,
-          lastRecord = this.hstIndexData.lastRecord;
-          
-        if (!this.chartDataLastMoment && firstRecord) {
-          this.chartDataLastMoment = firstRecord;
-//          console.log("this.hstIndexData.firstRecord", firstRecord);
-          }
-        let currentMoment = this.chartDataLastMoment;
-        while (currentMoment < lastRecord) {
-          let nextMoment = getNextMoment({
-            date: currentMoment,
-            mode: this.chartDataTimeMode}
-            );
-          if (this.hstIndexData [currentMoment]) {
-            console.log("this.chartDataCacheIndex", this.chartDataCacheIndex);
-            console.log("this.chartDataDepth", this.chartDataDepth);
-            if ( this.chartDataCacheIndex >= this.chartDataDepth) {
-              console.log("this.chartDataCache.length - last", this.chartDataCache.length);
-              this.chartDataCache.push([]);
-              console.log("this.chartDataCache.length", this.chartDataCache.length);
-              this.chartDataCache[this.chartDataCacheIndex][this.chartDataHeader.length - 1] = undefined;
+    
+      chartMarketPriceDataThisWeek () {  
+//        console.log("this.hstContractMarketPrice", this.hstContractMarketPrice);
+//        let firstRecord =  param.group.firstRecord,
+//            lastRecord =  param.group.lastRecord,
+//            currentRecord = param.currentRecord;
+//          if (!param.currentRecord && firstRecord) {
+//            currentRecord = firstRecord;
+//          };
+//          let currentRecord = lastCacheRecord;
+//        
+//        let newData = getNewMarketPrices({
+//          hstContractMarketPrice.this_week,
+//          currentRecord,
+//          lastRecord,
+//          instrumentIndex: coinsOrder,
+//          timeMode: param.timeMode,
+//          dataKey: param.dataKey}),
+//          lastCacheRecord,
+//          }
+//          
+//        let newData = getMarketPriceDataForGroup({
+//          data:hstContractMarketPrice.this_week
+//        }"this_week");          
+//        if pushMarketPriceDataForGroupToCache ("this_week", newData) {
+//          this.chartContractMarketPrice.lastRecord[group] = getNextRecord({
+//            date: newData[newData.length - 1][0],
+//            mode: this.chartTimeMode
+//          });
+//        };
+//       
+//       return [this.chartMarketPrice.header].concat(this.chartMarketPrice.dataCache.slice(this.chartMarketPrice.dataCache.length-this.chartMarketPrice.depth));
+     },
+      
+      chartIndexData () {  
+//        console.log("chartIndexData обновление", this.hstIndexData);
+        console.log("this.hstIndexData", this.hstIndexData);
+        console.log("this.hstContractMarketPrice", this.hstContractMarketPrice);
+        let lastRecord = this.hstIndexData.lastRecord;
+        let currentRecord = this.chartIndex.lastRecord;
+        console.log("lastRecord", lastRecord);
+        console.log("currentRecord", currentRecord);
+        
+        let newData = getNewDataArrayFromObjectByDate({
+          data: this.hstIndexData,
+          instrumentIndex: this.coinsIndex,
+          currentRecord,
+          lastRecord,
+          timeMode: this.chartTimeMode
+          });
+        
+        console.log("newData", newData);
+        
+        let newChartData = newData.map((value) => {
+          return value.map((value, index) => {
+            if (index > 0) {
+              if (!this.chartIndex.normalizeBase[index]) this.chartIndex.normalizeBase[index] = value;
+              value = {
+                f: value,
+                v: getNormalizedValue({
+                  value,
+                  base: this.chartIndex.normalizeBase[index],
+                  k: 1000
+                }), 
               };
-            console.log("this.chartDataCache", this.chartDataCache);
-            this.chartDataCache[this.chartDataCacheIndex][0] =  getTimeFromISODate({date: currentMoment, mode: this.chartDataTimeMode}); // вставляем дату
-            
-            for (let coin in this.hstIndexData [currentMoment]) {
-              let coinIndex = this.$store.getters.coinsOrder[coin];
-              let currentValue = this.hstIndexData [currentMoment][coin];
-              if (!this.chartDataNormalizeBase[coinIndex]) this.chartDataNormalizeBase[coinIndex] = currentValue; // фиксируем базу нормализации если ее еще нет
-              let normalizedValue = (currentValue/this.chartDataNormalizeBase[coinIndex] - 1)*10000; // todo в функцию             
-              
-              this.chartDataCache[this.chartDataCacheIndex][coinIndex] = {
-                f: currentValue,
-                v: normalizedValue, 
-                };
-              }; 
-            this.chartDataCacheIndex++;
-            this.chartDataLastMoment = nextMoment; 
             }
-          else {
-            console.log("В базе нет", currentMoment);
-            };
-          currentMoment = nextMoment;
-          };
-        // todo - херота! надо рассчитывать, чтоб показывались последние chartDataDepth значений 
-//        console.log("chartData", this.chartDataCache.slice(this.chartDataCache.length-this.chartDataDepth));
-        return [this.chartDataHeader].concat(this.chartDataCache.slice(this.chartDataCache.length-this.chartDataDepth));
+            return value;
+          });
+        });
+        
+        console.log("newChartData", newChartData);
+        
+        if (newChartData.length > 0) {
+          newChartData.forEach((value, index) => {
+            this.chartIndex.cacheData[index + this.chartIndex.cacheIndex] = Array.from(value);
+          });
+          this.chartIndex.cacheIndex += newChartData.length;
+          this.chartIndex.lastRecord = getNextRecord({
+            date: newData[newData.length-1][0],
+            mode: this.chartTimeMode
+          });
+        }; 
+        
+        console.log("this.chartIndex.cacheData", this.chartIndex.cacheData);
+        console.log("this.chartIndex.cacheIndex", this.chartIndex.cacheIndex);
+        console.log("this.chartIndex.lastRecord", this.chartIndex.lastRecord);
+
+        return [this.chartIndex.header].concat(this.chartIndex.cacheData.slice(this.chartIndex.cacheData.length-this.chartIndex.depth));
         },
         
       hstIndexData () {  
-//        console.log("dom-chart hstInstrumentTradeData", this.$store.getters.hstInstrumentTradeData[this.nmInstrument] || []);
         return this.$store.getters.okexData.index || {};
         },
-      chartDataTimeMode () {  
+      hstContractMarketPrice () {  
+        return this.$store.getters.okexData.contractMarketPrice || {};
+        },
+      chartTimeMode () {  
         return this.$store.getters.okexData.config.frameTimeMode;
+        },
+      coinsIndex () {  
+        return this.$store.getters.coinsOrder;
+        },
+      groups () {  
+        return this.$store.getters.okexData.futures.groups;
         },
       },
     methods: {
+    
+      getMarketPriceDataForGroup (param) {  
+//          let
+//            firstRecord =  param.group.firstRecord,
+//            lastRecord =  param.group.lastRecord,
+//            currentRecord = param.currentRecord;
+//          if (!param.currentRecord && firstRecord) {
+//            currentRecord = firstRecord;
+//          };
+//          let currentRecord = lastCacheRecord;
+//          
+//          return {
+//            data: getNewMarketPrices({
+//              param.group,
+//              currentRecord,
+//              lastRecord,
+//              instrumentIndex: coinsOrder,
+//              timeMode: param.timeMode,
+//              dataKey: param.dataKey}),
+//            lastCacheRecord,
+//            }
       },
+      
+      pushMarketPriceDataForGroupToCache (group, data) {  
+      },
+    },
     data () {
       return {    
-        chartDataCache: [[]],
-        chartDataLastMoment: 0,
-        chartDataCacheIndex: 0,
-        chartDataNormalizeBase: [],
-        chartDataHeader: ["time"],
-        chartDataDepth: 30,
+        
+        chartIndex: {
+          cacheData: [[]],
+          lastRecord: 0,
+          cacheIndex: 0,
+          normalizeBase: [],
+          header: [],
+          depth: 30,
+        },
+          
+        chartContractMarketPrice: {
+          header: [],
+          depth: 30,
+          /* Структура динамически создаваемых данных           
+            "группа": { 
+              cacheData: [[]],
+              lastRecord: 0,
+              cacheIndex: 0,
+              },
+          */ 
+        },
 
         chartOptions: { 
           height: 400,
@@ -124,7 +250,7 @@
           vAxisScaleType: "mirrorLog",
           interpolateNulls: true,
           },
-        chartOptions1: { 
+        chartIndexConfig: { 
           title: "Изменение курсов в ‱",
           height: 400,
           curveType: 'none',

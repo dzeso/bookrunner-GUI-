@@ -8,52 +8,35 @@ var okexData = {
     index: {
       firstRecord: 0,
       lastRecord: 0,
-/* Структура динамически создаваемых данных           
+      /* Структура динамически создаваемых данных           
           "dateTime": { 
             { coin: index },
             },
-*/   
+     */   
     },
-    futures: {
-      groups: {
-        this_week: {
-          name: "Weekly", 
-//          expirationDate: ""
-/* Структура динамически создаваемых данных           
-          contractMarketPrice: {
-            "dateTime": { 
-               coin: {
-                 "limitHigh": "1030.3",
-                 "vol": 276406,
-                 "last": 998.05,
-                 "sell": 998.05,
-                 "buy": 997.61,
-                 "unitAmount": 100,
-                 "hold_amount": 180178,
-                 "contractId": 20170324034,
-                 "high": 1049.18,
-                 "low": 973.15,
-                 "limitLow": "968.1"},
-                 },
-                 */  
-          },
-        next_week: {name: "Bi-weekly", 
-          },
-        quarter: {name: "Quarterly", 
-          },
-        },
-/* Структура динамически создаваемых данных           
-          "Группа": {
-            "коин": {
-              hstData: [ 
-                {timestamp: , price: , volMarket: , volTaker:, volMaker:, pnlTaker, pnlMaker} 
-                ],
-              config: 
-                { limitTaker: , limitMaker: , limitTakerMax: , limitMakerMax: , sprdMult: }, -- конфиг читается из файла настройки
-              hstBookrunnerActions: [ {timestamp: , action: , parameters: {}} ],
+    contractMarketPrice: {
+      /* Структура динамически создаваемых данных           
+       "Группа": {
+          firstRecord: 0,
+          lastRecord: 0,
+          "дата и время": {
+             "инструмент": { структура из ok_sub_futureusd_X_ticker_Y' }
               }
             },
-*/            
+      */ 
+      },
+    futures: {
+      groups: {
+        this_week: { 
+          name: "Weekly", 
+          },
+        next_week: {
+          name: "Bi-weekly", 
+          },
+        quarter: {
+          name: "Quarterly", 
+          },
+        },          
       coins: [
         {name: 'BTC'},
         {name: 'LTC'},
@@ -108,6 +91,24 @@ var okexData = {
       state.index.lastRecord = payload.time;        
 //      console.log ("-----------------  newOkexIndex", payload.time, state.index);
       },
+      
+      
+    setOkexMarketPriceData (state, payload) {
+      state.contractMarketPrice[payload.group][payload.time][payload.instrument] = payload.data; // заполняем объектную структуру 
+      // todo почему не через сет?
+      },
+    
+    newOkexMarketPriceGroup (state, group) {
+      Vue.set(state.contractMarketPrice, group, {});   
+//      console.log ("-----  newOkexMarketPriceGroup", state.contractMarketPrice[group]);
+      },
+      
+    newOkexMarketPriceData (state, payload) {
+      Vue.set(state.contractMarketPrice[payload.group], payload.time, {});
+      if (!state.contractMarketPrice.firstRecord) state.contractMarketPrice.firstRecord = payload.time;
+      state.contractMarketPrice.lastRecord = payload.time;        
+//      console.log ("-----------------  newOkexMarketPrice", state.contractMarketPrice);
+      },
     },
     
   actions: {       
@@ -115,11 +116,21 @@ var okexData = {
      updateOkexIndex ({getters, commit}, payload) {
        if (!getters.okexData.index[payload.time]) {
          commit("newOkexIndex", payload);
-//         commit('setObjReactive', getters.okexData.index);
          }
        commit("setOkexIndex", payload);  
        },  
+       
+     updateOkexMarketPrice ({getters, commit}, payload) {
+       if (!getters.okexData.contractMarketPrice[payload.group]) {
+         commit("newOkexMarketPriceGroup", payload.group);
+         }
+       if (!getters.okexData.contractMarketPrice[payload.group][payload.time]) {
+         commit("newOkexMarketPriceData", payload);
+         }
+       commit("setOkexMarketPriceData", payload);                
+//       console.log ("updateOkexMarketPrice", payload);
+       }, 
     },
-  };
+ };
 console.log ("store-okex-data started");
 </script>
