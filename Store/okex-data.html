@@ -3,7 +3,7 @@
 var okexData = {
   state: {
     config: {
-      frameTimeMode: "hh:mm",
+      frameTimeMode: "hh:mm:s0",
       },
     index: {
       firstRecord: 0,
@@ -105,8 +105,8 @@ var okexData = {
       
     newOkexMarketPriceData (state, payload) {
       Vue.set(state.contractMarketPrice[payload.group], payload.time, {});
-      if (!state.contractMarketPrice.firstRecord) state.contractMarketPrice.firstRecord = payload.time;
-      state.contractMarketPrice.lastRecord = payload.time;        
+      if (!state.contractMarketPrice.firstRecord) state.contractMarketPrice[payload.group].firstRecord = payload.time;
+      state.contractMarketPrice[payload.group].lastRecord = payload.time;        
 //      console.log ("-----------------  newOkexMarketPrice", state.contractMarketPrice);
       },
     },
